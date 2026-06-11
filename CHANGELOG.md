@@ -1,0 +1,41 @@
+# Changelog
+
+All notable changes to this project will be documented in this file.
+
+The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and this project adheres to a PEP 440 versioning scheme (see `_version.py`).
+
+Status: **beta**. The bedrock's surface is deliberately tiny and locked from day
+one (`docs/api-stability.md`); changes land via the stack's shim policy
+(temporary, noisy, tracked, terminal), never silently.
+
+## [Unreleased]
+
+## [0.1.0] -- 2026-06-11
+
+Initial release: Phase F of the DazzleLib stack plan
+([architecture contract](https://github.com/DazzleLib/.github/blob/main/docs/STACK-MAP.md),
+epic [DazzleLib/.github#3](https://github.com/DazzleLib/.github/issues/3)).
+
+### Added
+- **Protocols** (`dazzle_lib.protocols`): `Viewable` (`summary()`/`__str__`) and
+  `Serializable` (`to_dict`/`from_dict`/`to_json`, `SCHEMA_VERSION`) -- structural,
+  `runtime_checkable`, no subclassing required.
+- **Payload schemas** (`dazzle_lib.payloads`): `FileMetadataDict`,
+  `TimestampsDict`, `WindowsMetadataDict`, `UnixMetadataDict`, `LinkTargetDict`,
+  `HashResultDict` -- the cross-layer TypedDict shapes, mirroring what
+  `dazzle-filekit` actually produces (typing change, not behavior change).
+- **Exception bedrock** (`dazzle_lib.exceptions`): `DazzleError` root +
+  `PathIdentityError` / `FileOperationError` / `LinkError` / `PreserveError`
+  domain bases.
+- **`DazzleDataMixin`** (`dazzle_lib.mixins`): derives `to_json`/`summary`/
+  `__str__` from a host class's `to_dict`.
+- **Day-one guards**: `docs/api-stability.md` + import-stability canary, and the
+  **charter test** (`tests/test_charter.py`) -- fails on any behavior-bearing or
+  non-stdlib import in the package, red-green verified. 19 tests.
+
+### Notes
+- MIT, stdlib-only, Python >=3.9, no entry points -- a pure library by design.
+
+[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.1.0...HEAD
+[0.1.0]: https://github.com/DazzleLib/dazzle-lib/releases/tag/v0.1.0
