@@ -2,10 +2,12 @@
 
 **The DazzleLib stack's bedrock: shared Protocols, TypedDict payload schemas, and the exception root.**
 
-[![PyPI](https://img.shields.io/pypi/v/dazzle-lib)](https://pypi.org/project/dazzle-lib/)
-[![Python](https://img.shields.io/badge/python-3.9%2B-blue)](https://pypi.org/project/dazzle-lib/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Platforms](https://img.shields.io/badge/platforms-all-brightgreen)](docs/platform-support.md)
+[![PyPI](https://img.shields.io/pypi/v/dazzle-lib?color=green)](https://pypi.org/project/dazzle-lib/)
+[![Release Date](https://img.shields.io/github/release-date/DazzleLib/dazzle-lib?color=green)](https://github.com/DazzleLib/dazzle-lib/releases)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+[![Installs](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/djdarcy/4ad3247ec3775486258d9e4fb81ae38a/raw/installs.json)](https://dazzlelib.github.io/dazzle-lib/stats/#installs)
+[![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20BSD-lightgrey.svg)](docs/platform-support.md)
 
 Every `dazzle-*` library ([the stack](https://github.com/DazzleLib/.github/blob/main/docs/STACK-MAP.md)) builds on this package: it defines what stack objects can be expected to do (view themselves, serialize themselves) and what shapes cross-layer payloads have. **Types only** -- by charter this package contains no I/O, no path handling, no platform probing, and no behavior, forever.
 
