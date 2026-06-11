@@ -78,13 +78,24 @@ This package is **stdlib-only forever** and contains **no behavior**. `tests/tes
 
 Full architecture contract: [STACK-MAP.md](https://github.com/DazzleLib/.github/blob/main/docs/STACK-MAP.md). API stability policy: [docs/api-stability.md](docs/api-stability.md).
 
-## Development
+## Contributing
+
+Contributions welcome! Please open an issue or submit a pull request.
 
 ```bash
 pip install -e ".[dev]"
 python -m pytest tests/ -v
 ```
 
+Before proposing additions, note the two house rules this package lives by:
+- **The charter**: types only -- no I/O, no path handling, no behavior (`tests/test_charter.py` enforces it; a PR that needs to weaken that test belongs in a higher layer)
+- **The rule of two**: a Protocol or TypedDict enters the bedrock only when two or more stack libraries need it
+- API changes follow **[docs/api-stability.md](docs/api-stability.md)** (locked surface, noisy-shim deprecation policy)
+
+Like the project?
+
+[!["Buy Me A Coffee"](https://www.buymeacoffee.com/assets/img/custom_images/orange_img.png)](https://www.buymeacoffee.com/djdarcy)
+
 ## License
 
-MIT -- the bedrock sits beneath MIT and GPL stack members alike, so it carries the permissive license.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. The bedrock sits beneath MIT and GPL stack members alike, so it carries the permissive license.
