@@ -24,7 +24,7 @@ from .payloads import (
     UnixMetadataDict,
     WindowsMetadataDict,
 )
-from .protocols import Serializable, Viewable
+from .protocols import PathVariantResolver, Serializable, Viewable
 
 __all__ = [
     "__version__",
@@ -33,6 +33,7 @@ __all__ = [
     # protocols
     "Viewable",
     "Serializable",
+    "PathVariantResolver",
     # payload schemas
     "TimestampsDict",
     "WindowsMetadataDict",

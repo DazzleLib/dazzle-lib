@@ -11,6 +11,18 @@ one (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.2.0] -- 2026-06-17
+
+### Added
+- **`PathVariantResolver`** (`dazzle_lib.protocols`): a structural
+  `runtime_checkable` Protocol that proposes alternative names for a path (e.g.
+  a Windows UNC path and its mapped-drive equivalent) so a consumer can retry a
+  failed operation under another name. It is the bedrock half of the stack's
+  `path_variant_resolver` seam (STACK-MAP D7) and satisfies the rule of two:
+  `dazzle-filekit` consumes it (UNC<->mapped fallback I/O), `unctools` is the
+  canonical resolver. `str` in / `Sequence[str]` out -- pathlib stays out of the
+  bedrock. Locked in `docs/api-stability.md`; charter test still green. 21 tests.
+
 ## [0.1.0] -- 2026-06-11
 
 Initial release: Phase F of the DazzleLib stack plan
@@ -37,5 +49,6 @@ epic [DazzleLib/.github#3](https://github.com/DazzleLib/.github/issues/3)).
 ### Notes
 - MIT, stdlib-only, Python >=3.9, no entry points -- a pure library by design.
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.1.0...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/DazzleLib/dazzle-lib/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DazzleLib/dazzle-lib/releases/tag/v0.1.0

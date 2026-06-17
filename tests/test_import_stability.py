@@ -14,6 +14,7 @@ LOCKED_SURFACE = {
         "__app_name__",
         "Viewable",
         "Serializable",
+        "PathVariantResolver",
         "TimestampsDict",
         "WindowsMetadataDict",
         "UnixMetadataDict",
@@ -27,7 +28,7 @@ LOCKED_SURFACE = {
         "PreserveError",
         "DazzleDataMixin",
     ],
-    "dazzle_lib.protocols": ["Viewable", "Serializable"],
+    "dazzle_lib.protocols": ["Viewable", "Serializable", "PathVariantResolver"],
     "dazzle_lib.payloads": [
         "TimestampsDict",
         "WindowsMetadataDict",

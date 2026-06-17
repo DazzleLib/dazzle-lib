@@ -6,7 +6,12 @@ import json
 from dataclasses import dataclass
 from typing import Any, Dict
 
-from dazzle_lib import DazzleDataMixin, Serializable, Viewable
+from dazzle_lib import (
+    DazzleDataMixin,
+    PathVariantResolver,
+    Serializable,
+    Viewable,
+)
 
 
 @dataclass
@@ -55,6 +60,34 @@ def test_bare_class_satisfies_protocols_structurally():
 def test_non_conforming_object_rejected():
     assert not isinstance(object(), Serializable)
     assert not isinstance(object(), Viewable)
+
+
+class FakeResolver:
+    """A hand-written resolver -- no import of dazzle_lib, no subclassing.
+    Proves a consumer (filekit) can inject ANY variant source structurally."""
+
+    def variants(self, path):
+        if path.startswith("\\\\"):
+            return [path, "Z:" + path[len("\\\\server\\share"):]]
+        return [path]
+
+
+def test_resolver_satisfied_structurally():
+    r = FakeResolver()
+    assert isinstance(r, PathVariantResolver)
+    # and it actually does the job a consumer expects
+    assert r.variants("C:\\local\\f.txt") == ["C:\\local\\f.txt"]
+    assert r.variants("\\\\server\\share\\f.txt")[0] == "\\\\server\\share\\f.txt"
+
+
+def test_object_without_variants_is_not_a_resolver():
+    # discriminating, not vacuous: a near-miss (wrong method name) is rejected
+    class NotAResolver:
+        def resolve(self, path):
+            return [path]
+
+    assert not isinstance(NotAResolver(), PathVariantResolver)
+    assert not isinstance(object(), PathVariantResolver)
 
 
 def test_round_trip():

@@ -13,9 +13,9 @@ serialize themselves INTO the plain TypedDict payload shapes defined in
 Charter reminder: this module is types-only. No I/O, no behavior.
 """
 
-from typing import Any, Dict, Protocol, runtime_checkable
+from typing import Any, Dict, Protocol, Sequence, runtime_checkable
 
-__all__ = ["Viewable", "Serializable"]
+__all__ = ["Viewable", "Serializable", "PathVariantResolver"]
 
 
 @runtime_checkable
@@ -57,4 +57,41 @@ class Serializable(Protocol):
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "Serializable":
         """Construct an instance from a dict produced by :meth:`to_dict`."""
+        ...
+
+
+@runtime_checkable
+class PathVariantResolver(Protocol):
+    """Proposes alternative names for a path so an operation that fails under
+    one name can be retried under another.
+
+    The motivating case: on Windows a file often has two names -- a UNC form
+    (``\\\\server\\share\\f``) and a mapped-drive form (``Z:\\f``) -- and a
+    security zone can block opening/copying via one name while the other works,
+    even though both *exist*. A resolver answers "what are this path's other
+    names?" so the caller can retry the real operation under each.
+
+    Design stance (STACK-MAP D7/D10 -- the documented ``path_variant_resolver``
+    hook): this is identity KNOWLEDGE, not I/O. A resolver only *proposes*
+    candidate path strings; it never opens, copies, stats, or otherwise touches
+    the filesystem on the caller's behalf. The canonical implementation is the
+    path-identity layer (unctools, L0). Upper layers (e.g. filekit, L1) accept a
+    resolver so the variant-knowledge can come from any identity source and be
+    swapped -- or faked in tests -- rather than reached through a shared object
+    graph. Layers meet at this contract. (filekit's default resolver is
+    unctools-backed; whether a given consumer treats that source as a hard or
+    optional dependency is the consumer's call, not the Protocol's.)
+
+    Expectations:
+
+    - ``variants(path)`` returns candidate path strings to try, in priority
+      order, and SHOULD include ``path`` itself (conventionally first). A
+      resolver that knows no alternatives returns ``[path]`` -- a valid no-op.
+      It MUST NOT return ``None``. Strings in, strings out (the dict/str is the
+      interface; pathlib stays out of the bedrock).
+    """
+
+    def variants(self, path: str) -> "Sequence[str]":
+        """Return candidate names for ``path`` (including ``path`` itself), in
+        the order an operation should try them."""
         ...

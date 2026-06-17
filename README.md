@@ -19,7 +19,7 @@ pip install dazzle-lib
 
 | Module | Contents |
 |---|---|
-| `dazzle_lib.protocols` | `Viewable` (`summary()`/`__str__`), `Serializable` (`to_dict`/`from_dict`/`to_json`, `SCHEMA_VERSION`) -- structural `Protocol`s, `runtime_checkable`, nothing is forced to subclass |
+| `dazzle_lib.protocols` | `Viewable` (`summary()`/`__str__`), `Serializable` (`to_dict`/`from_dict`/`to_json`, `SCHEMA_VERSION`), `PathVariantResolver` (`variants(path)` -- a path's alternative names, e.g. UNC <-> mapped drive) -- structural `Protocol`s, `runtime_checkable`, nothing is forced to subclass |
 | `dazzle_lib.payloads` | The cross-layer TypedDict schemas: `FileMetadataDict`, `TimestampsDict`, `WindowsMetadataDict`, `UnixMetadataDict`, `LinkTargetDict`, `HashResultDict` -- mirroring what `dazzle-filekit` actually produces |
 | `dazzle_lib.exceptions` | `DazzleError` root + per-domain bases (`PathIdentityError`, `FileOperationError`, `LinkError`, `PreserveError`) |
 | `dazzle_lib.mixins` | `DazzleDataMixin` -- derives `to_json`/`summary`/`__str__` from your `to_dict` |

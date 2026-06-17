@@ -20,22 +20,28 @@ fails if any disappears or moves.
    imports -- `tests/test_charter.py` enforces it; weakening that test is an
    architecture change, not a code review comment.
 
-## Locked surface (v0.1.0)
+## Locked surface
 
 | Module | Symbols |
 |---|---|
 | `dazzle_lib` (re-exports) | everything below + `__version__`, `__app_name__` |
-| `dazzle_lib.protocols` | `Viewable`, `Serializable` |
+| `dazzle_lib.protocols` | `Viewable`, `Serializable`, `PathVariantResolver` (added 0.2.0) |
 | `dazzle_lib.payloads` | `TimestampsDict`, `WindowsMetadataDict`, `UnixMetadataDict`, `FileMetadataDict`, `LinkTargetDict`, `HashResultDict` |
 | `dazzle_lib.exceptions` | `DazzleError`, `PathIdentityError`, `FileOperationError`, `LinkError`, `PreserveError` |
 | `dazzle_lib.mixins` | `DazzleDataMixin` |
+
+`PathVariantResolver` (0.2.0) satisfies the rule of two: **two** stack libraries
+need it -- filekit (L1) *consumes* a resolver to add fallback retries to its file
+operations, and unctools (L0) *is* the canonical resolver. It is the bedrock half
+of the documented `path_variant_resolver` seam (STACK-MAP D7); see the
+2026-06-14 resolver-edge DWP. `str`-typed in/out -- pathlib stays out of the bedrock.
 
 ## Known consumers
 
 | Consumer | Symbols | Since |
 |---|---|---|
-| dazzle-filekit (planned, 0.3.0 / stack P1) | payload TypedDicts as metadata/timestamp signatures | stack phase P1 |
-| dazzle-unctools (planned, 0.2.0 / stack P1) | `DazzleError`, `PathIdentityError` | stack phase P1 |
+| dazzle-filekit (planned, 0.3.0 / stack P1) | payload TypedDicts as metadata/timestamp signatures; **consumes `PathVariantResolver`** + raises `FileOperationError` | stack phase P1 |
+| dazzle-unctools (planned, 0.2.0 / stack P1) | `DazzleError`, `PathIdentityError`; **satisfies `PathVariantResolver`** (default resolver) | stack phase P1 |
 | dazzle-linklib (planned / stack P2) | `Serializable`, `LinkTargetDict`, `LinkError`, `DazzleDataMixin` | stack phase P2 |
 | dazzle-preservelib (planned / stack P3) | `Serializable`, `FileMetadataDict`, `PreserveError`, `DazzleDataMixin` | stack phase P3 |
 
