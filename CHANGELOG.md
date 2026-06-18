@@ -11,6 +11,16 @@ one (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.5.0] -- 2026-06-17
+
+### Added
+- **The generic transition executor (`dazzle_lib.transitions`)** -- `TransitionContext` (one engine that runs any declared state axis: read current value, resolve the declared edge so the receipt's `conserved`/`reversible` come from the registry, refuse a `REFUSED_AT_BOUNDARY` edge, write the substrate, return a `Receipt`; `undo` round-trips), `Receipt` (the generic record one transition leaves -- the collapse of the per-verb `*Receipt` types), and the typed failures `CriticalityBoundaryError` (pre-flight refusal) / `TransitionError` (apply/undo failure). Exported from the package root.
+- The executor is generic over an INJECTED registry + consumer-supplied hooks (`detect`/`write`/`identity_of`/`check`/`invert`); the per-verb contexts that bind real substrates (alias rebind, mode switch, visibility, containment, projection) stay in the consumer. Charter-safe: stdlib + `dazzle_lib.states` (`Reversibility`) only, no I/O. Lifted from `dazzlecmd_lib.groupable` (B3c of dazzlecmd's Groupable<->Continuum<->states unification).
+- **Identity enters through a hook, not an attribute.** The executor's one coupling to a consumer was an `entity.fqcn` access; it is now an `identity_of(entity) -> str` hook (the same shape as the `detect`/`write` hooks), and `Receipt.entity_identity` is a domain-neutral string. The engine assumes nothing about the entity's type -- a consumer with no FQCN can use it (the smoke tests drive it with an entity that has no `.fqcn`).
+
+### Changed
+- Unlike the 0.3/0.4 lifts (verbatim), the executor was lifted WITH a generalization -- the `identity_of` seam replaces the hardcoded `entity.fqcn`. Behavior-equivalence is proven by the suite, not by AST-identity. No guarantee weakened.
+
 ## [0.4.0] -- 2026-06-17
 
 ### Added
@@ -67,6 +77,6 @@ epic [DazzleLib/.github#3](https://github.com/DazzleLib/.github/issues/3)).
 ### Notes
 - MIT, stdlib-only, Python >=3.9, no entry points -- a pure library by design.
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.4.0...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.5.0...HEAD
 [0.2.0]: https://github.com/DazzleLib/dazzle-lib/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DazzleLib/dazzle-lib/releases/tag/v0.1.0

@@ -54,6 +54,12 @@ from .states import (
     assert_round_trip,
     observe,
 )
+from .transitions import (
+    CriticalityBoundaryError,
+    Receipt,
+    TransitionContext,
+    TransitionError,
+)
 
 __all__ = [
     "__version__",
@@ -95,4 +101,9 @@ __all__ = [
     "TransitionRegistry",
     "assert_round_trip",
     "observe",
+    # transition executor (0.5+) -- the generic apply/undo/criticality engine
+    "TransitionContext",
+    "Receipt",
+    "CriticalityBoundaryError",
+    "TransitionError",
 ]
