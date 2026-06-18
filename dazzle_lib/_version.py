@@ -25,7 +25,7 @@ PHASE = ""  # Per-MINOR feature set: "" (stable), "alpha", "beta", "rc1", etc.
 PROJECT_PHASE = ""  # "prealpha", "alpha", "beta", "stable", or ""
 
 # Auto-updated by git hooks - do not edit manually
-__version__ = "0.4.0_main_10-20260617-9c4a89e4"
+__version__ = "0.4.0_main_11-20260617-4b0b85fd"
 __app_name__ = "dazzle-lib"
 
 

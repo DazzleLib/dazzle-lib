@@ -62,10 +62,10 @@ class TestTransition:
             Transition(axis="k", from_values=("t",), to_value=OPEN, verb="g",
                        reversibility=Reversibility.GENERATIVE)
 
-    def test_reversible_must_preserve_fqcn(self):
+    def test_reversible_must_preserve_identity(self):
         with pytest.raises(ValueError):
             Transition(axis="k", from_values=(OPEN,), to_value=OPEN, verb="r",
-                       reversibility=Reversibility.REVERSIBLE, fqcn_fate="reborn")
+                       reversibility=Reversibility.REVERSIBLE, identity_fate="reborn")
 
     def test_matches_honors_verb_axis_and_wildcards(self):
         t = Transition(axis="mode", from_values=("a", "b"), to_value=OPEN, verb="rebind",
@@ -82,7 +82,7 @@ class TestCompositeTransition:
         # each leg in isolation is weaker.
         leg1 = Transition(axis="kind", from_values=("tool",), to_value=OPEN, verb="grad",
                           reversibility=Reversibility.GENERATIVE, conserved="files",
-                          creates=("remote",), loses=("coupling",), fqcn_fate="reborn")
+                          creates=("remote",), loses=("coupling",), identity_fate="reborn")
         leg2 = Transition(axis="mode", from_values=("embedded",), to_value="submodule",
                           verb="grad", reversibility=Reversibility.ONE_WAY, conserved="remote")
         comp = CompositeTransition(name="graduation", legs=(leg1, leg2), verb="grad")

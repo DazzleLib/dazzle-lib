@@ -27,14 +27,15 @@ Design (the 2026-06-09 state-system DWP):
 
 - **State is OBSERVED, not stored** (F1). :class:`EntityState` is a frozen
   snapshot assembled on demand; the substrates (filesystem, config, the Python
-  type, the index) stay authoritative. Only identity (``fqcn``) is carried by
-  the entity itself.
+  type, the index) stay authoritative. Only the entity's ``identity`` is carried
+  by the entity itself -- a domain-neutral string (a consumer fills it with
+  whatever names its entities; dazzlecmd uses its FQCN).
 
 - **Transitions are DECLARED edges** (F2/F3). A :class:`Transition` names its
   axis, the states it goes from/to, its verb, its reversibility class, the
   conserved quantity (by NAME -- the context fills the runtime value, which keeps
   this module free of the consumer's invariant types), and the criticality
-  bookkeeping (``creates``/``loses``/``fqcn_fate``). The
+  bookkeeping (``creates``/``loses``/``identity_fate``). The
   :class:`TransitionRegistry` makes the criticality tables queryable.
 
 - **The identity contract becomes a test** (F3.2). :func:`assert_round_trip`
@@ -103,7 +104,7 @@ class Reversibility(Enum):
       (``CriticalityBoundaryError``).
     - ``GENERATIVE``: creates/destroys structure (ungroup / graduation);
       irreversible by construction -- ``creates``/``loses`` MUST be declared and
-      ``fqcn_fate`` is typically ``"reborn"``.
+      ``identity_fate`` is typically ``"reborn"``.
     """
 
     REVERSIBLE = "reversible"
@@ -166,13 +167,14 @@ class EntityState:
     """A measurement of an entity's state across one or more axes.
 
     Assembled on demand from the authoritative substrates and never persisted
-    (F1). Carries C1 (``fqcn``) plus an ``axis-name -> observed value`` mapping.
-    Equality is by ``(fqcn, values)``; use :meth:`on` to compare a subset of
+    (F1). Carries the entity's ``identity`` (a domain-neutral string -- dazzlecmd
+    fills it with the FQCN) plus an ``axis-name -> observed value`` mapping.
+    Equality is by ``(identity, values)``; use :meth:`on` to compare a subset of
     axes (the L2-semantic round-trip check ignores axes a transition does not
     touch).
     """
 
-    fqcn: str
+    identity: str
     values: Mapping[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -187,7 +189,7 @@ class EntityState:
 
     def on(self, *axes: str) -> "EntityState":
         """A restriction of this observation to ``axes`` (for subset equality)."""
-        return EntityState(self.fqcn, {a: self.values[a] for a in axes if a in self.values})
+        return EntityState(self.identity, {a: self.values[a] for a in axes if a in self.values})
 
     def coordinates_in(self, space: ContinuumSpaceProtocol) -> Mapping[str, int]:
         """This observation as a POINT in a :class:`ContinuumSpace` -- the signed
@@ -216,9 +218,10 @@ class Transition:
     consumers that want the registry to build their descriptor type; it stays
     ``None`` in a default registry to preserve ``states <- groupable``.
 
-    ``creates``/``loses``/``fqcn_fate`` make the criticality bridging points
+    ``creates``/``loses``/``identity_fate`` make the criticality bridging points
     declared DATA: what a transition brings into being, what it destroys, and
-    what becomes of C1 (``"preserved"`` | ``"reborn"`` | ``"dissolved"``).
+    what becomes of the entity's identity (``"preserved"`` | ``"reborn"`` |
+    ``"dissolved"``).
     """
 
     axis: str
@@ -230,7 +233,7 @@ class Transition:
     invariant_factory: Optional[Callable[..., Any]] = None
     creates: Tuple[str, ...] = ()
     loses: Tuple[str, ...] = ()
-    fqcn_fate: str = "preserved"
+    identity_fate: str = "preserved"
     note: str = ""
 
     def __post_init__(self) -> None:
@@ -241,11 +244,11 @@ class Transition:
                 f"GENERATIVE transition ({self.verb} on {self.axis}) must declare "
                 f"creates and/or loses -- the criticality must be explicit data."
             )
-        # A REVERSIBLE edge must preserve C1 (identity is the carried invariant).
-        if self.reversibility is Reversibility.REVERSIBLE and self.fqcn_fate != "preserved":
+        # A REVERSIBLE edge must preserve identity (the carried invariant).
+        if self.reversibility is Reversibility.REVERSIBLE and self.identity_fate != "preserved":
             raise ValueError(
                 f"REVERSIBLE transition ({self.verb} on {self.axis}) must preserve "
-                f"fqcn (C1); got fqcn_fate={self.fqcn_fate!r}."
+                f"identity; got identity_fate={self.identity_fate!r}."
             )
 
     @property
@@ -289,7 +292,7 @@ class CompositeTransition:
     legs: Tuple[Transition, ...]
     verb: str
     atomicity: str = "all_or_nothing"   # "all_or_nothing" | "checkpoint"
-    fqcn_fate: str = "reborn"
+    identity_fate: str = "reborn"
 
     def __post_init__(self) -> None:
         if not self.legs:
@@ -481,7 +484,7 @@ def assert_round_trip(
 # ---------------------------------------------------------------------------
 # observe -- assemble a VALIDATED EntityState from platform readings
 # ---------------------------------------------------------------------------
-def observe(registry: TransitionRegistry, fqcn: str, **axis_values: Any) -> EntityState:
+def observe(registry: TransitionRegistry, identity: str, **axis_values: Any) -> EntityState:
     """Build an :class:`EntityState` from per-axis readings, validated against
     the registered axes.
 
@@ -504,7 +507,7 @@ def observe(registry: TransitionRegistry, fqcn: str, **axis_values: Any) -> Enti
                 f"state model (axis values={axis.values!r}); the model does not "
                 f"cover this platform state"
             )
-    return EntityState(fqcn, dict(axis_values))
+    return EntityState(identity, dict(axis_values))
 
 
 __all__ = [

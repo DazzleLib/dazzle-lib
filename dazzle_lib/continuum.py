@@ -1,5 +1,5 @@
-"""``dazzlecmd_lib.continuum`` -- the signed ordered-axis primitive (the bones
-of every Groupable verb's ladder).
+"""``dazzle_lib.continuum`` -- the signed ordered-axis primitive (the bones of an
+ordered, reversible state ladder; a consumer's grouping/ungrouping verbs ride it).
 
 A **Continuum** is an axis whose states are TOTALLY ORDERED by a SIGNED rank
 with an INVARIANT-BEARING ZERO: `cold pole (-N) ... 0 (neutral, the invariant)
@@ -279,9 +279,9 @@ class _ContinuumLens:
 # Presence is the grouping<->ungrouping reading of warm/cold at the space level
 # (group = make more present, ungroup = make less present).
 #
-# Concrete (the canonical dazzlecmd presence space): silence, hide, shadow,
-# disable, detach, remove are DIFFERENT mechanisms (different config keys, code
-# paths) but ALL move a tool MORE or LESS present. A ContinuumSpace aligns them on
+# Concrete example (an aggregator's presence space, e.g. dazzlecmd's): silence,
+# hide, shadow, disable, detach, remove are DIFFERENT mechanisms (different config
+# keys, code paths) but ALL move a tool MORE or LESS present. A ContinuumSpace aligns them on
 # one scale so "the next STRONGER (colder) / WEAKER (warmer) move" is well-defined
 # across those orthogonal mechanisms -- the keystone of the same-bones thesis at
 # the verb layer.
