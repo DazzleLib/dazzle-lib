@@ -1,7 +1,5 @@
 # dazzle-lib
 
-**The DazzleLib stack's bedrock: shared Protocols, TypedDict payload schemas, the exception root, and the pure stdlib primitives (`Continuum` + the state system) every dazzle-\* tool composes on.**
-
 [![PyPI](https://img.shields.io/pypi/v/dazzle-lib?color=green)](https://pypi.org/project/dazzle-lib/)
 [![Release Date](https://img.shields.io/github/release-date/DazzleLib/dazzle-lib?color=green)](https://github.com/DazzleLib/dazzle-lib/releases)
 [![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
@@ -9,7 +7,11 @@
 [![Installs](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/djdarcy/4ad3247ec3775486258d9e4fb81ae38a/raw/installs.json)](https://dazzlelib.github.io/dazzle-lib/stats/#installs)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20BSD-lightgrey.svg)](docs/platform-support.md)
 
-Every `dazzle-*` library ([the stack](https://github.com/DazzleLib/.github/blob/main/docs/STACK-MAP.md)) builds on this package: it defines what stack objects can be expected to do (view themselves, serialize themselves), what shapes cross-layer payloads have, and -- as of 0.3 -- the pure computational **primitives** they compose on. **Types + pure primitives** -- by charter this package is stdlib-only and SIDE-EFFECT-FREE forever (no I/O, no path handling, no platform probing, no subprocess). Pure computation over data (a `Continuum`'s ordering / stepping / slicing) is in-charter; side effects never are. (The charter evolved 0.2 -> 0.3 from "types only" to "types + pure primitives" -- the stack needs shared *composable* primitives, not only contract types; see the CHANGELOG for the why. The hard guarantees, enforced by `tests/test_charter.py`, are unchanged.)
+**The DazzleLib stack's bedrock: shared Protocols, TypedDict payload schemas, the exception root, and the pure stdlib primitives (`Continuum` + the state system) every dazzle-\* tool composes on.**
+
+Every `dazzle-*` library ([the stack](https://github.com/DazzleLib/.github/blob/main/docs/STACK-MAP.md)) builds on this package: it defines what stack objects can be expected to do (view themselves, serialize themselves), what shapes cross-layer payloads have, and (as of v0.3.x) the pure computational **primitives** they compose on. 
+
+**Types + pure primitives** -- by charter this package is stdlib-only and SIDE-EFFECT-FREE forever (no I/O, no path handling, no platform probing, no subprocess). Pure computation over data (a `Continuum`'s ordering / stepping / slicing) is in-charter; side effects never are. (The charter evolved 0.2 -> 0.3 from "types only" to "types + pure primitives" -- the stack needs shared *composable* primitives, not only contract types; see the CHANGELOG for the why. The hard guarantees, enforced by `tests/test_charter.py`, are unchanged.)
 
 ```bash
 pip install dazzle-lib
@@ -46,6 +48,8 @@ class TransferResult(DazzleDataMixin):
 
     @classmethod
     def from_dict(cls, data):
+        # from_dict is the boundary -- VALIDATE here, don't just reconstruct.
+        # A bare cls(**data) re-imports the "nothing to validate against" bug.
         return cls(path=data["path"], metadata=data["metadata"])
 
 result = TransferResult("a.txt", {"mode": 0o644, "size": 10, "timestamps": {}})
@@ -62,6 +66,15 @@ try:
 except DazzleError as e:
     ...  # caught, whichever layer raised it
 ```
+
+### Dict at the boundary, typed object inside
+
+"The dict is the interface" is a **boundary** rule, not a working-representation rule. Confuse the two -- start computing against the dict instead of just handing it across a seam -- and you give up the schema that makes a mistake surface at the boundary instead of silently, three layers downstream. The plain dict is the *wire format* between independently-versioned libraries, so `dazzle-filekit` and `dazzle-preservelib` exchange a `FileMetadataDict` without sharing a class hierarchy. It is **not** an invitation to thread raw dicts through a library's internals: each side reconstructs its OWN typed object at `from_dict` and works with that. Pass a dict *across* the boundary; never reach for `d["key"]` deep in your code.
+
+Two consequences, stated outright because the stack learned them the hard way:
+
+- **`from_dict` should VALIDATE, not just reconstruct.** A `TypedDict` is statically-checkable but has *no* runtime enforcement -- at runtime it is a plain dict. The boundary is the safety net: `from_dict` is where an incoming payload becomes a *checked* typed object. A bare `cls(**data)` reintroduces exactly the "nothing to validate against, miss it downstream" failure that typed objects exist to prevent. (Reference pattern: dazzlecmd reconstructs every entity through Pydantic `validate_python` at its manifest boundary.)
+- **The computational primitives are typed objects, not dicts.** `Continuum`, the state-system types (`StateAxis` / `EntityState` / `Transition`), and `Receipt` are frozen dataclasses -- the dict idiom above is for cross-library *payloads*, not for the shared machinery. Reach for a dict only at a serialization boundary or a genuinely open/extensible keyspace (validated at construction); reach for a typed object everywhere else.
 
 ## The charter (enforced by tests)
 
