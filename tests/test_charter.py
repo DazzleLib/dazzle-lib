@@ -68,7 +68,10 @@ def test_no_banned_imports():
 
 def test_stdlib_only():
     """No third-party imports, ever (the package must not even import filekit)."""
-    allowed = {"json", "typing", "enum", "dataclasses", "abc", "collections",
+    allowed = {"__future__",   # PEP 563 lazy annotations -- a compiler directive,
+                               # NOT a runtime/behavior import (charter-safe; added
+                               # with the 0.3 pure-primitives evolution).
+               "json", "typing", "enum", "dataclasses", "abc", "collections",
                "datetime", "ast", "dazzle_lib"}
     violations = {}
     for path in _module_files():

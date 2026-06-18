@@ -1,6 +1,6 @@
 # dazzle-lib
 
-**The DazzleLib stack's bedrock: shared Protocols, TypedDict payload schemas, and the exception root.**
+**The DazzleLib stack's bedrock: shared Protocols, TypedDict payload schemas, the exception root, and the pure stdlib primitives (`Continuum`) every dazzle-\* tool composes on.**
 
 [![PyPI](https://img.shields.io/pypi/v/dazzle-lib?color=green)](https://pypi.org/project/dazzle-lib/)
 [![Release Date](https://img.shields.io/github/release-date/DazzleLib/dazzle-lib?color=green)](https://github.com/DazzleLib/dazzle-lib/releases)
@@ -9,7 +9,7 @@
 [![Installs](https://img.shields.io/endpoint?url=https://gist.githubusercontent.com/djdarcy/4ad3247ec3775486258d9e4fb81ae38a/raw/installs.json)](https://dazzlelib.github.io/dazzle-lib/stats/#installs)
 [![Platform](https://img.shields.io/badge/platform-Windows%20%7C%20Linux%20%7C%20macOS%20%7C%20BSD-lightgrey.svg)](docs/platform-support.md)
 
-Every `dazzle-*` library ([the stack](https://github.com/DazzleLib/.github/blob/main/docs/STACK-MAP.md)) builds on this package: it defines what stack objects can be expected to do (view themselves, serialize themselves) and what shapes cross-layer payloads have. **Types only** -- by charter this package contains no I/O, no path handling, no platform probing, and no behavior, forever.
+Every `dazzle-*` library ([the stack](https://github.com/DazzleLib/.github/blob/main/docs/STACK-MAP.md)) builds on this package: it defines what stack objects can be expected to do (view themselves, serialize themselves), what shapes cross-layer payloads have, and -- as of 0.3 -- the pure computational **primitives** they compose on. **Types + pure primitives** -- by charter this package is stdlib-only and SIDE-EFFECT-FREE forever (no I/O, no path handling, no platform probing, no subprocess). Pure computation over data (a `Continuum`'s ordering / stepping / slicing) is in-charter; side effects never are. (The charter evolved 0.2 -> 0.3 from "types only" to "types + pure primitives" -- the stack needs shared *composable* primitives, not only contract types; see the CHANGELOG for the why. The hard guarantees, enforced by `tests/test_charter.py`, are unchanged.)
 
 ```bash
 pip install dazzle-lib
@@ -23,6 +23,7 @@ pip install dazzle-lib
 | `dazzle_lib.payloads` | The cross-layer TypedDict schemas: `FileMetadataDict`, `TimestampsDict`, `WindowsMetadataDict`, `UnixMetadataDict`, `LinkTargetDict`, `HashResultDict` -- mirroring what `dazzle-filekit` actually produces |
 | `dazzle_lib.exceptions` | `DazzleError` root + per-domain bases (`PathIdentityError`, `FileOperationError`, `LinkError`, `PreserveError`) |
 | `dazzle_lib.mixins` | `DazzleDataMixin` -- derives `to_json`/`summary`/`__str__` from your `to_dict` |
+| `dazzle_lib.continuum` (0.3+) | `Continuum` -- the signed ordered-axis primitive (invariant-bearing zero, warm/cold lens, THAC0 threshold gate, channel backing) -- and `ContinuumSpace` -- N parallel Continuums on one presence scale (`slice`, `cascade_to_neutral`, cross-axis navigation, `describe`). Plus their structural `Protocol`s. Pure, stdlib-only, side-effect-free |
 
 ## The idea: the dict is the interface
 
