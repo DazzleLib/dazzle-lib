@@ -11,6 +11,15 @@ one (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.4.0] -- 2026-06-17
+
+### Added
+- **The generic state-system primitives (`dazzle_lib.states`)** -- `StateAxis` (a named dimension; HAS-A optional `Continuum` backing that derives its ordered value set), `EntityState` (a frozen, OBSERVED-not-stored snapshot; `coordinates_in` reads it as a point in a `ContinuumSpace`), `Transition` (a declared single-axis edge carrying its `Reversibility` class + the conserved-invariant NAME + criticality data), `CompositeTransition` (a multi-axis move as ordered composition -- criticality is the leg-interaction result, NOT the union of leg classes), `TransitionRegistry` (the criticality tables made queryable), plus `assert_round_trip` (the `group o ungroup = identity` contract as a substrate-agnostic executable check) and `observe` (validated state assembly). Exported from the package root.
+- These are the L0 *machinery* of the state system; the DECLARED instances (which axes a toolset has, which transitions are live) stay in the consumer -- so the bedrock ships the vocabulary and each aggregator builds its own registry. Charter-safe: stdlib + the sibling `Continuum` primitive only, no I/O, no effects (`tests/test_charter.py` green with the module present). Lifted from `dazzlecmd_lib.states` (B3b of dazzlecmd's Groupable<->Continuum<->states unification); that module now re-exports these and keeps only its own registry.
+
+### Changed
+- Charter status note: the 0.3 "types + pure primitives" charter now holds its second primitive group. No guarantee weakened -- the state types are pure data + pure functions over declared edges; effectful transitions live in the *contexts* that consume a registry, never here.
+
 ## [0.3.0] -- 2026-06-17
 
 ### Changed
@@ -57,6 +66,6 @@ epic [DazzleLib/.github#3](https://github.com/DazzleLib/.github/issues/3)).
 ### Notes
 - MIT, stdlib-only, Python >=3.9, no entry points -- a pure library by design.
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.3.0...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.4.0...HEAD
 [0.2.0]: https://github.com/DazzleLib/dazzle-lib/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DazzleLib/dazzle-lib/releases/tag/v0.1.0

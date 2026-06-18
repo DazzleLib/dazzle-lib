@@ -1,6 +1,6 @@
 # dazzle-lib
 
-**The DazzleLib stack's bedrock: shared Protocols, TypedDict payload schemas, the exception root, and the pure stdlib primitives (`Continuum`) every dazzle-\* tool composes on.**
+**The DazzleLib stack's bedrock: shared Protocols, TypedDict payload schemas, the exception root, and the pure stdlib primitives (`Continuum` + the state system) every dazzle-\* tool composes on.**
 
 [![PyPI](https://img.shields.io/pypi/v/dazzle-lib?color=green)](https://pypi.org/project/dazzle-lib/)
 [![Release Date](https://img.shields.io/github/release-date/DazzleLib/dazzle-lib?color=green)](https://github.com/DazzleLib/dazzle-lib/releases)
@@ -24,6 +24,7 @@ pip install dazzle-lib
 | `dazzle_lib.exceptions` | `DazzleError` root + per-domain bases (`PathIdentityError`, `FileOperationError`, `LinkError`, `PreserveError`) |
 | `dazzle_lib.mixins` | `DazzleDataMixin` -- derives `to_json`/`summary`/`__str__` from your `to_dict` |
 | `dazzle_lib.continuum` (0.3+) | `Continuum` -- the signed ordered-axis primitive (invariant-bearing zero, warm/cold lens, THAC0 threshold gate, channel backing) -- and `ContinuumSpace` -- N parallel Continuums on one presence scale (`slice`, `cascade_to_neutral`, cross-axis navigation, `describe`). Plus their structural `Protocol`s. Pure, stdlib-only, side-effect-free |
+| `dazzle_lib.states` (0.4+) | The generic state-system machinery: `StateAxis` (a dimension; HAS-A optional `Continuum`), `EntityState` (an OBSERVED-not-stored snapshot; a point in a `ContinuumSpace`), `Transition` / `CompositeTransition` (declared edges + ordered multi-axis composition, with the `Reversibility` criticality algebra), `TransitionRegistry` (the criticality tables, queryable), `assert_round_trip` (the `group o ungroup = identity` contract executable), `observe`. The vocabulary; the consumer DECLARES its own axes/edges. Pure, stdlib + `Continuum` only |
 
 ## The idea: the dict is the interface
 

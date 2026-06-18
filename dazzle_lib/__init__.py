@@ -43,6 +43,17 @@ from .continuum import (
     ContinuumSpace,
     ContinuumSpaceProtocol,
 )
+from .states import (
+    OPEN,
+    CompositeTransition,
+    EntityState,
+    Reversibility,
+    StateAxis,
+    Transition,
+    TransitionRegistry,
+    assert_round_trip,
+    observe,
+)
 
 __all__ = [
     "__version__",
@@ -74,4 +85,14 @@ __all__ = [
     "ContinuumSpaceProtocol",
     "ContinuumError",
     "ContinuumBoundaryError",
+    # state-system primitives (0.4+) -- axes, observed state, declared transitions
+    "OPEN",
+    "Reversibility",
+    "StateAxis",
+    "EntityState",
+    "Transition",
+    "CompositeTransition",
+    "TransitionRegistry",
+    "assert_round_trip",
+    "observe",
 ]
