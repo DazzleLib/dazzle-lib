@@ -345,8 +345,17 @@ class ContinuumSpace:
     """
 
     name: str
-    axes: Mapping[str, "Continuum"]
-    presence: Mapping[str, Mapping[str, int]]
+    # A dimension is a Continuum (a leaf axis) OR a ContinuumSpace (a sub-space) --
+    # the RECURSIVE, CLOSED composition: a product of products is a product (see
+    # ``compose``/``normal_form``). Annotated ``Any`` to avoid a forward Union ref;
+    # the contract is ``Continuum | ContinuumSpace``.
+    axes: Mapping[str, Any]
+    # When ``presence`` is given, this is an ALIGNED space (the merged-spectrum
+    # contract below; all axes must be Continuums). When ``None``, it is a PRODUCT
+    # space: independent dimensions on their own scales, no merged spectrum --
+    # cross-axis navigation is undefined BY DESIGN (scale-safety). ``compose``
+    # builds product spaces; ``normal_form`` folds nesting to the flat leaf product.
+    presence: Optional[Mapping[str, Mapping[str, int]]] = None
     meaning: str = ""
     invariant: str = ""
     # Optional caller-supplied TYPED payload per (axis, level) -- the "templated
@@ -360,10 +369,26 @@ class ContinuumSpace:
         if not self.axes:
             raise ContinuumError(f"continuum space {self.name!r} has no axes")
         object.__setattr__(self, "axes", dict(self.axes))
-        object.__setattr__(self, "presence",
-                           {a: dict(m) for a, m in self.presence.items()})
         object.__setattr__(self, "payloads",
                            {a: dict(m) for a, m in self.payloads.items()})
+        if self.presence is None:
+            # PRODUCT space: independent dimensions (each a Continuum or a
+            # ContinuumSpace); no merged spectrum to validate. The recursion is the
+            # closure -- normal_form() folds it to the flat leaf product. Cross-axis
+            # navigation raises (see _require_aligned); per-leaf ops still work.
+            return
+        # ALIGNED space (the merged-spectrum contract). Aligned spaces are leaf-only:
+        # every axis must be a Continuum (a sub-space has its own internal spectrum
+        # and cannot share one merged scale -- compose() it as a product instead).
+        object.__setattr__(self, "presence",
+                           {a: dict(m) for a, m in self.presence.items()})
+        for aname, ax in self.axes.items():
+            if not isinstance(ax, Continuum):
+                raise ContinuumError(
+                    f"space {self.name!r}: an ALIGNED space (presence given) requires "
+                    f"Continuum axes; axis {aname!r} is a {type(ax).__name__}. "
+                    f"Use ContinuumSpace.compose(...) to build a product space."
+                )
         if set(self.axes) != set(self.presence):
             raise ContinuumError(
                 f"continuum space {self.name!r}: axes {sorted(self.axes)} and "
@@ -409,6 +434,67 @@ class ContinuumSpace:
                         )
                     seen_coords[p] = (aname, lvl)
 
+    # -- composition: the closed, recursive algebra --------------------------
+    # {Continuum, ContinuumSpace, compose} is functionally complete the way
+    # {+, x, ^} is: compose is CLOSED (a product of products is a product) and
+    # normal_form FOLDS nesting back to a flat leaf product (3^3^3 -> 3^27), so
+    # arbitrary dimensions need only these three constructs -- no level-4 type.
+    @property
+    def is_aligned(self) -> bool:
+        """True if this space carries a merged presence spectrum (cross-axis
+        navigation defined). False for a PRODUCT space (independent dimensions)."""
+        return self.presence is not None
+
+    @staticmethod
+    def compose(name: str, members: Mapping[str, Any], *,
+                meaning: str = "", invariant: str = "") -> "ContinuumSpace":
+        """Compose N dimensions (each a Continuum or a ContinuumSpace) into one
+        ContinuumSpace -- the CLOSURE. The result is a (non-aligned) PRODUCT space;
+        cross-dimension comparison is undefined by design (build an ALIGNED
+        sub-space for a comparable spectrum). Recursion is arbitrary; a member may
+        itself be a composed space, and ``normal_form`` folds it back to the flat
+        leaf product."""
+        if not members:
+            raise ContinuumError(f"compose({name!r}): at least one dimension required")
+        return ContinuumSpace(name=name, axes=dict(members), presence=None,
+                              meaning=meaning, invariant=invariant)
+
+    def leaves(self) -> Mapping[str, "Continuum"]:
+        """Every LEAF Continuum by qualified (dotted) name -- the recursion bottoms
+        out at 1-D axes; a sub-space prefixes its leaves (``lower.add``)."""
+        out: dict = {}
+
+        def walk(prefix: str, sp: "ContinuumSpace") -> None:
+            for k, ax in sp.axes.items():
+                qn = f"{prefix}{k}"
+                if isinstance(ax, ContinuumSpace):
+                    walk(qn + ".", ax)
+                else:
+                    out[qn] = ax
+        walk("", self)
+        return out
+
+    def normal_form(self) -> "ContinuumSpace":
+        """The FOLD: flatten any nesting to the flat PRODUCT over leaf Continuums
+        (qualified names). Idempotent and associative -- nesting order is
+        presentation only. An already-flat leaf space is returned unchanged (the
+        identity case), so an aligned space normal-forms to itself."""
+        leaf_map = dict(self.leaves())
+        already_flat = (set(leaf_map) == set(self.axes)
+                        and all(isinstance(a, Continuum) for a in self.axes.values()))
+        if already_flat:
+            return self
+        return ContinuumSpace(name=f"{self.name}.nf", axes=leaf_map, presence=None,
+                              meaning=self.meaning, invariant=self.invariant)
+
+    def _require_aligned(self, op: str) -> None:
+        if self.presence is None:
+            raise ContinuumError(
+                f"space {self.name!r} is a PRODUCT (non-aligned) space; {op} requires "
+                f"an aligned (sub-)space with a merged presence spectrum (build one with "
+                f"presence=, or navigate a specific aligned sub-space)"
+            )
+
     # -- axis access ---------------------------------------------------------
     def axis(self, name: str) -> "Continuum":
         try:
@@ -431,6 +517,7 @@ class ContinuumSpace:
     def presence_of(self, axis: str, level: str) -> int:
         """The shared-scale presence coordinate of ``(axis, level)`` (0 = fully
         present, <0 = suppressed)."""
+        self._require_aligned("presence_of")
         self.axis(axis).rank(level)  # validate level membership
         return self.presence[axis][level]
 
@@ -446,6 +533,7 @@ class ContinuumSpace:
         and is not listed. The proof the axes share one scale:
         ``... featured > [neutral] > silenced > hidden > shadowed > disabled ...``
         """
+        self._require_aligned("spectrum")
         items = [(a, lvl) for a, m in self.presence.items()
                  for lvl, p in m.items() if p != 0]
         items.sort(key=lambda al: self.presence[al[0]][al[1]], reverse=True)
@@ -457,6 +545,7 @@ class ContinuumSpace:
         ``shadowed`` -> ``disabled``); landing on the shared zero returns THIS
         axis's neutral. Framing-NEUTRAL -- a surface labels it 'stronger'/'weaker'
         (or shows both via ``--adjacent``) per its own figure pole."""
+        self._require_aligned("colder_than")
         cur = self.presence_of(axis, level)
         colder = [(a, lvl, p) for a, m in self.presence.items()
                   for lvl, p in m.items() if p < cur]
@@ -472,6 +561,7 @@ class ContinuumSpace:
         ``None`` at the warm pole. Symmetric to :meth:`colder_than` -- e.g. from
         a suppressed state up to its axis's neutral, or from neutral up to an
         amplified (``>0``) state if any axis has one."""
+        self._require_aligned("warmer_than")
         cur = self.presence_of(axis, level)
         warmer = [(a, lvl, p) for a, m in self.presence.items()
                   for lvl, p in m.items() if p > cur]
@@ -510,6 +600,7 @@ class ContinuumSpace:
         and all *weaker* ones toward 0 -- the monotone bundle. Direction falls out
         of ``level``'s presence sign (a cold level sweeps warmer toward 0; a warm
         level sweeps colder toward 0), returned cold->warm."""
+        self._require_aligned("cascade_to_neutral")
         p = self.presence_of(axis, level)
         if p == 0:
             return ()                          # already neutral -- nothing to set
@@ -525,14 +616,25 @@ class ContinuumSpace:
         compose it (with their presence coordinates), and the merged spectrum --
         so a caller can see at a glance what the space measures and judge what
         fits it. The self-describing affordance for a domain-neutral primitive."""
-        lines = [f"ContinuumSpace {self.name!r}: "
+        kind = "aligned" if self.is_aligned else "product"
+        lines = [f"ContinuumSpace {self.name!r} ({kind}): "
                  f"{self.meaning or '(no stated meaning)'}"]
         if self.invariant:
             lines.append(f"  conserved at 0: {self.invariant}")
-        for aname, cont in self.axes.items():
-            rungs = ", ".join(f"{lvl}[{self.presence_of(aname, lvl):+d}]"
-                              for lvl in cont.levels())  # cold -> warm
-            lines.append(f"  axis {aname!r}: {rungs}")
-        spec = " > ".join(f"{a}:{lvl}" for a, lvl in self.spectrum())
-        lines.append(f"  spectrum (warm->cold): {spec or '(none)'}")
+        if self.is_aligned:
+            for aname, cont in self.axes.items():
+                rungs = ", ".join(f"{lvl}[{self.presence_of(aname, lvl):+d}]"
+                                  for lvl in cont.levels())  # cold -> warm
+                lines.append(f"  axis {aname!r}: {rungs}")
+            spec = " > ".join(f"{a}:{lvl}" for a, lvl in self.spectrum())
+            lines.append(f"  spectrum (warm->cold): {spec or '(none)'}")
+        else:
+            for aname, ax in self.axes.items():
+                if isinstance(ax, ContinuumSpace):
+                    lines.append(f"  dim {aname!r}: sub-space {ax.name!r} "
+                                 f"({'aligned' if ax.is_aligned else 'product'})")
+                else:
+                    lines.append(f"  dim {aname!r}: continuum "
+                                 f"({' -> '.join(ax.levels())})")
+            lines.append(f"  leaves (normal form): {', '.join(self.leaves())}")
         return "\n".join(lines)

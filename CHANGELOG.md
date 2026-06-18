@@ -11,6 +11,13 @@ one (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.6.0] -- 2026-06-18
+
+### Changed
+- **`ContinuumSpace` is now CLOSED under composition -- the functionally-complete composition algebra.** A dimension may be a `Continuum` OR a `ContinuumSpace` (recursive), so `ContinuumSpace.compose(name, members)` yields a `ContinuumSpace` (closure: a product of products is a product) and `normal_form()` FOLDS arbitrary nesting back to a flat product over the leaf Continuums (qualified dotted names; idempotent + associative). `{Continuum, ContinuumSpace, compose}` is complete the way `{+, x, ^}` is -- the third construct folds back into itself (`3^3^3 -> 3^27`), so arbitrary dimensions need only these three; no level-4 type.
+- **Alignment is now a PROPERTY, not a requirement.** The single merged presence spectrum (the prior hard contract) applies to an *aligned* space (`presence=` given -> all axes must be Continuums; validated exactly as before -- backward-compatible). A `compose`d **product** space (`presence=None`) holds independent, differently-scaled dimensions and refuses cross-axis navigation (`spectrum`/`colder_than`/`warmer_than`/`presence_of`/`cascade_to_neutral` raise `ContinuumError`) BY DESIGN -- scale-safety (you cannot compare "how visible" to "which mode"). `is_aligned` reports which a space is.
+- **Why now:** validated experiment-first by representing the arithmetic operation hierarchy in the system (the spike: `+/-`,`x/div` = degenerate/commutative continuums = "Groupables"; `^/log/root` = the full non-commutative continuum with two inverses; `group` = compression between levels). The current hard-aligned space could NOT hold the three differently-scaled levels -- proving the generalization necessary, not assumed. No existing behavior changed (62 tests; the aligned path + `KIT_PRESENCE_SPACE` are byte-identical). `tests/test_continuum_composition.py` gates the closure laws.
+
 ## [0.5.0] -- 2026-06-17
 
 ### Added
@@ -77,6 +84,6 @@ epic [DazzleLib/.github#3](https://github.com/DazzleLib/.github/issues/3)).
 ### Notes
 - MIT, stdlib-only, Python >=3.9, no entry points -- a pure library by design.
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.6.0...HEAD
 [0.2.0]: https://github.com/DazzleLib/dazzle-lib/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DazzleLib/dazzle-lib/releases/tag/v0.1.0
