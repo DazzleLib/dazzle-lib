@@ -11,6 +11,11 @@ one (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.6.4] -- 2026-06-19
+
+### Added
+- **`Transition.kind` -- the lateral/generative vocabulary bridge (SH redesign Step 4).** A derived (no duplicate field) read-only property mapping the existing `Reversibility` onto the redesign's words: `REVERSIBLE -> "lateral"` (a move within the space; round-trips), `GENERATIVE -> "generative"` (spawns/destroys structure -- the sqrt(-1) move; lossy-on-reverse unless a `Receipt` preserves what it made, spike C13), `REFUSED_AT_BOUNDARY -> "refused"`. Step 4 is a recognition step: the lifted `states.py` machinery (`EntityState` as the point a State IS, `coordinates_in` a `ContinuumSpace`; `Transition` with `creates`/`loses`/`identity_fate` + the enforced "GENERATIVE must declare creates/loses") already IS the State/Transition layer -- the redesign's lateral/generative is the existing reversible/generative, now speakable in both vocabularies for the kit-lifecycle classification. Claims port spike C13 (`test_transition_kind.py`).
+
 ## [0.6.3] -- 2026-06-19
 
 ### Added
@@ -99,6 +104,6 @@ epic [DazzleLib/.github#3](https://github.com/DazzleLib/.github/issues/3)).
 ### Notes
 - MIT, stdlib-only, Python >=3.9, no entry points -- a pure library by design.
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.6.3...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.6.4...HEAD
 [0.2.0]: https://github.com/DazzleLib/dazzle-lib/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DazzleLib/dazzle-lib/releases/tag/v0.1.0

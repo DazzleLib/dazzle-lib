@@ -256,6 +256,20 @@ class Transition:
         """Whether the inverse verb restores the prior state (REVERSIBLE only)."""
         return self.reversibility is Reversibility.REVERSIBLE
 
+    @property
+    def kind(self) -> str:
+        """The SH-redesign LATERAL / GENERATIVE vocabulary, DERIVED from
+        ``reversibility`` (no duplicate field): a ``REVERSIBLE`` edge is
+        ``"lateral"`` (a move WITHIN the space; round-trips); a ``GENERATIVE``
+        edge is ``"generative"`` (spawns/destroys structure -- the sqrt(-1) move;
+        lossy-on-reverse unless a ``Receipt`` preserves what it made, spike C13);
+        a ``REFUSED_AT_BOUNDARY`` edge is ``"refused"`` (criticality refuses it)."""
+        return {
+            Reversibility.REVERSIBLE: "lateral",
+            Reversibility.GENERATIVE: "generative",
+            Reversibility.REFUSED_AT_BOUNDARY: "refused",
+        }[self.reversibility]
+
     def matches(self, *, verb: str, axis: str, from_value: Any, to_value: Any = OPEN) -> bool:
         """Whether this declared edge covers an observed ``(verb, axis, from -> to)``."""
         if verb != self.verb or axis != self.axis:
