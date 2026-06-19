@@ -45,6 +45,9 @@ from .continuum import (
     ContinuumSpaceProtocol,
     QuadrantView,
     RungValue,
+    children,
+    fold,
+    walk,
 )
 from .states import (
     OPEN,
@@ -99,6 +102,10 @@ __all__ = [
     "ContinuumBoundaryError",
     "RungValue",
     "QuadrantView",
+    # the one direction-agnostic traversal (axes OUTWARD + fibers INWARD)
+    "children",
+    "walk",
+    "fold",
     # state-system primitives (0.4+) -- axes, observed state, declared transitions
     "OPEN",
     "Reversibility",

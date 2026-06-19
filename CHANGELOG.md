@@ -11,6 +11,11 @@ one (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.6.7] -- 2026-06-19
+
+### Added
+- **The inward/outward SYMMETRY: `Continuum.fibers` + the unified `children()` / `walk()` / `fold()` -- the recursive core finalized.** A `Continuum` rung may now carry a FIBER (a latent `RungValue` sub-structure hung over its position -- the INWARD direction), stored in an optional `fibers` field (empty default -> byte-identical to before). `children(node)` is the ONE child-relation, TOTAL over the ladder: a `ContinuumSpace`'s children are its axes (OUTWARD composition), a `Continuum`'s are its per-rung fibers (INWARD), a `Groupable`/`Unified` is a leaf. `walk()` (pre-order generator) and `fold()` (bottom-up reduce) descend this one relation -- they do not know or care which direction they go (the doubly-linked-list truth: direction is a parameter, not a special case). `ContinuumSpace.leaves()`/`normal_form()` remain the axes-only specializations; `walk`/`children`/`fold` are the general form that also descends fibers, and leaves-via-walk == the shipped `leaves()` (behavior-preserving). Proven experiment-first (the symmetry spike, 12/12) before landing; pointer-kits are the first inward consumer (the kit-lifecycle capstone). Charter-pure. This supersedes the signoff DWP's Step 6 ("defer walk + a separate fiber field") with unify-now.
+
 ## [0.6.6] -- 2026-06-19
 
 ### Fixed
@@ -114,6 +119,6 @@ epic [DazzleLib/.github#3](https://github.com/DazzleLib/.github/issues/3)).
 ### Notes
 - MIT, stdlib-only, Python >=3.9, no entry points -- a pure library by design.
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.6.6...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.6.7...HEAD
 [0.2.0]: https://github.com/DazzleLib/dazzle-lib/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DazzleLib/dazzle-lib/releases/tag/v0.1.0

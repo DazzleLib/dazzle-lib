@@ -35,7 +35,9 @@ from dataclasses import dataclass, field
 from fractions import Fraction
 from typing import (
     Any,
+    Callable,
     FrozenSet,
+    Iterator,
     Mapping,
     Optional,
     Protocol,
@@ -99,6 +101,11 @@ class Continuum:
     ranks: Mapping[str, int]
     invariant: str = ""
     channels: Mapping[str, FrozenSet[str]] = field(default_factory=dict)
+    # INWARD: a per-rung FIBER (a latent RungValue sub-structure hung over a
+    # rung's position). The SAME child-relation as ContinuumSpace.axes, pointed
+    # inward -- children()/walk() descend axes AND fibers uniformly (direction is
+    # not special). Empty default -> an un-fibered continuum is byte-identical.
+    fibers: Mapping[str, "RungValue"] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         if not self.ranks:
@@ -107,6 +114,7 @@ class Continuum:
         object.__setattr__(self, "ranks", dict(self.ranks))
         object.__setattr__(self, "channels",
                            {k: frozenset(v) for k, v in self.channels.items()})
+        object.__setattr__(self, "fibers", dict(self.fibers))
         if len(set(self.ranks.values())) != len(self.ranks):
             raise ContinuumError(
                 f"continuum {self.name!r} has duplicate ranks -- the order must "
@@ -823,3 +831,48 @@ class QuadrantView:
             a, b = _QUADRANT_SIG[_QS[i]], _QUADRANT_SIG[_QS[(i + 1) % 4]]
             flips.append(self.axis1 if a["first"] != b["first"] else self.axis2)
         return tuple(flips)
+
+
+# ===========================================================================
+# children / walk / fold -- the ONE recursive traversal, direction-agnostic.
+# ===========================================================================
+# A node's CHILDREN are ladder-elements regardless of direction: a ContinuumSpace's
+# children are its AXES (OUTWARD composition); a Continuum's children are its
+# per-rung FIBERS (INWARD); a Groupable / Unified is a leaf. ``walk`` descends this
+# ONE relation -- it does not know or care which way it is going (the doubly-
+# linked-list truth: left or right is just which way you go, the internals are the
+# same). ``ContinuumSpace.leaves()``/``normal_form()`` are the axes-only
+# specializations; this is the general form that also descends fibers. PURE.
+
+def children(node: Any) -> "Mapping[str, RungValue]":
+    """The ladder-children of ``node`` -- a ``name -> RungValue`` map, TOTAL over
+    the four ladder types: ``ContinuumSpace`` -> its axes (OUTWARD); ``Continuum``
+    -> its per-rung fibers (INWARD; empty unless fibered); ``Groupable`` /
+    ``Unified`` -> a leaf (empty). (Completeness pinned by the suite -- a new
+    ladder type with no case fails; no silent fallback.)"""
+    if isinstance(node, ContinuumSpace):
+        return dict(node.axes)
+    if isinstance(node, Continuum):
+        return dict(node.fibers)
+    return {}  # Groupable, Unified -> leaves (implicit continuum/cut are explicit)
+
+
+def walk(node: Any, *, key: Tuple[str, ...] = ()) -> "Iterator[Tuple[Tuple[str, ...], Any]]":
+    """Pre-order generator over ``node`` and all descendants via :func:`children`
+    -- ONE traversal for composition (axes) AND fiber (rungs). Yields
+    ``(key_path, node)`` (the key path is the chain of child names from the root)."""
+    yield key, node
+    for name, child in children(node).items():
+        yield from walk(child, key=key + (name,))
+
+
+def fold(node: Any, leaf: Callable[[Any], Any],
+         combine: Callable[[Any, list], Any]) -> Any:
+    """Bottom-up reduce over the ladder: ``leaf(node)`` at a childless node;
+    ``combine(node, [fold(child)...])`` at an internal node. The reducing form of
+    :func:`walk` (collect leaves, flatten, serialize) -- one recursion, both
+    directions."""
+    kids = children(node)
+    if not kids:
+        return leaf(node)
+    return combine(node, [fold(c, leaf, combine) for c in kids.values()])
