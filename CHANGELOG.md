@@ -11,6 +11,11 @@ one (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.6.1] -- 2026-06-19
+
+### Added
+- **The ladder floor (`dazzle_lib.groupable`): `Groupable` (the `{minus, plus}` dual that is the BOUNDS of an axis) + `Unified` (the 0_ag pre-cut form that is IMPLICITLY a Groupable).** The bottom two rungs of the recursive ladder `Unified -> Groupable -> Continuum -> ContinuumSpace`. `Groupable.invert()` swaps the poles (every value is a dual -- invertibility is the FLOOR, nothing is one-way); `Groupable.unified(label)` builds the cheap one-label form with a *derived* inverse; `Unified.groupable()` performs the cut. Pure + import-clean by charter (stdlib only; `test_charter` green with the module present). The first slice of the SH-grounded base-object redesign; the `densify()`/`poles()` bridges to `Continuum` land with the Continuum rework (they would couple the modules). Grounded in D. Darcy's SH-Mechanics ("an axis is the unification of its two poles"); the claims port spike C1/C11 (`test_groupable.py`).
+
 ## [0.6.0] -- 2026-06-18
 
 ### Changed
@@ -84,6 +89,6 @@ epic [DazzleLib/.github#3](https://github.com/DazzleLib/.github/issues/3)).
 ### Notes
 - MIT, stdlib-only, Python >=3.9, no entry points -- a pure library by design.
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.6.0...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.6.1...HEAD
 [0.2.0]: https://github.com/DazzleLib/dazzle-lib/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DazzleLib/dazzle-lib/releases/tag/v0.1.0

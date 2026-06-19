@@ -35,6 +35,7 @@ from .payloads import (
     WindowsMetadataDict,
 )
 from .protocols import PathVariantResolver, Serializable, Viewable
+from .groupable import Groupable, Unified
 from .continuum import (
     Continuum,
     ContinuumBoundaryError,
@@ -84,6 +85,9 @@ __all__ = [
     "PreserveError",
     # mixin
     "DazzleDataMixin",
+    # ladder floor (0.6.1+) -- the 0_ag unified value + the {-,+} dual (the bounds)
+    "Unified",
+    "Groupable",
     # pure primitives (0.3+) -- the Continuum signed-axis + its space
     "Continuum",
     "ContinuumSpace",
