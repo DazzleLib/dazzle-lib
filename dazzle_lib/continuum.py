@@ -32,6 +32,7 @@ Two backings, one interface:
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from fractions import Fraction
 from typing import (
     Any,
     FrozenSet,
@@ -39,8 +40,18 @@ from typing import (
     Optional,
     Protocol,
     Tuple,
+    Union,
     runtime_checkable,
 )
+
+from .groupable import Groupable, Unified
+
+# The recursive ladder: a rung's latent VALUE (its fiber) is any ladder element.
+# A bare name+position rung carries none; when a fiber materializes it is one of
+# these (spike C12). Per-rung fiber STORAGE on Continuum is DEFERRED until a
+# consumer needs it -- this alias names the contract now. ``Continuum`` /
+# ``ContinuumSpace`` are forward refs (defined below).
+RungValue = Union[Unified, Groupable, "Continuum", "ContinuumSpace"]
 
 
 class ContinuumError(Exception):
@@ -230,6 +241,71 @@ class Continuum:
                 return level
         # Nothing introduced is present -> the neutral / warmest level.
         return self.warm_pole()
+
+    # -- ladder bridges (SH redesign Step 2: connect the value types to the axis)
+    def poles(self) -> Groupable:
+        """The axis's BOUNDS as a :class:`~dazzle_lib.groupable.Groupable`: the
+        cold pole is the ``minus`` form, the warm pole the ``plus`` form, unified
+        by this axis's invariant/name. The always-present extrema ROLE (spike C1)
+        -- a Groupable is what a Continuum's bounds ARE."""
+        return Groupable(
+            minus=self.cold_pole(),
+            plus=self.warm_pole(),
+            meaning=self.invariant or self.name,
+        )
+
+    def densify_between(
+        self,
+        lower: str,
+        upper: str,
+        new_level: str,
+        *,
+        channels: Optional[FrozenSet[str]] = None,
+    ) -> "Continuum":
+        """Insert a NEW named rung at the MEDIANT position strictly between two
+        existing rungs -- exact, no float drift (spike C2). The inserted rung's
+        position is a ``Fraction``; existing rungs are untouched, so an
+        un-densified continuum stays byte-identical. This is group/ungroup at the
+        axis level (densify <-> flatten)."""
+        ra, rb = Fraction(self.rank(lower)), Fraction(self.rank(upper))
+        if ra == rb:
+            raise ContinuumError(
+                f"cannot densify between {lower!r} and {upper!r} in "
+                f"{self.name!r}: equal rank {ra}"
+            )
+        if new_level in self.ranks:
+            raise ContinuumError(
+                f"level {new_level!r} already exists in continuum {self.name!r}"
+            )
+        mediant = Fraction(
+            ra.numerator + rb.numerator, ra.denominator + rb.denominator
+        )
+        new_ranks = dict(self.ranks)
+        new_ranks[new_level] = mediant
+        new_channels = dict(self.channels)
+        if channels is not None:
+            new_channels[new_level] = frozenset(channels)
+        return Continuum(
+            name=self.name,
+            ranks=new_ranks,
+            invariant=self.invariant,
+            channels=new_channels,
+        )
+
+    @classmethod
+    def from_groupable(
+        cls, groupable: Groupable, *, name: Optional[str] = None
+    ) -> "Continuum":
+        """Materialize a Groupable's IMPLICIT continuum: the degenerate 2-rung
+        axis ``{minus: -1, plus: +1}`` whose poles ARE the Groupable's bounds.
+        The ``Unified -> Groupable -> Continuum`` bridge (spike C1): a Groupable
+        always carries an implicit Continuum, addable when it appears. (Lives on
+        Continuum, not Groupable, to keep the bedrock layering acyclic.)"""
+        return cls(
+            name=name or (groupable.meaning or f"{groupable.minus}|{groupable.plus}"),
+            ranks={groupable.minus: -1, groupable.plus: 1},
+            invariant=groupable.meaning,
+        )
 
 
 @dataclass(frozen=True)

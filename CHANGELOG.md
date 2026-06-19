@@ -11,6 +11,11 @@ one (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.6.2] -- 2026-06-19
+
+### Added
+- **The ladder bridges on `Continuum` (SH-grounded base-object redesign, Step 2): `poles()`, `densify_between()`, `Continuum.from_groupable()`, and the `RungValue` alias.** `poles()` returns the axis's bounds as a `Groupable` (cold pole = `minus`, warm pole = `plus`) -- a Groupable IS what a Continuum's bounds are (the always-present extrema role). `densify_between(lower, upper, new_level)` inserts a new NAMED rung at the exact MEDIANT `Fraction` strictly between two existing rungs (group/ungroup at the axis level; ports spike C2) -- existing int rungs are untouched, so an un-densified continuum stays byte-identical. `Continuum.from_groupable(g)` materializes a Groupable's implicit degenerate continuum `{minus:-1, plus:+1}` (the `Unified -> Groupable -> Continuum` bridge; lives on `Continuum` to keep bedrock layering acyclic). `RungValue = Unified | Groupable | Continuum | ContinuumSpace` names the per-rung-fiber contract (spike C12); fiber STORAGE on `Continuum` is deferred until a consumer needs it. Purely method-additive -- no dataclass shape change, no consumer churn; claims port spike C1/C2 (`test_continuum_bridges.py`). The production `Continuum` stays NAME-keyed (correcting the signoff DWP's position-keyed `rungs`); see the Step-2 DWP.
+
 ## [0.6.1] -- 2026-06-19
 
 ### Added
@@ -89,6 +94,6 @@ epic [DazzleLib/.github#3](https://github.com/DazzleLib/.github/issues/3)).
 ### Notes
 - MIT, stdlib-only, Python >=3.9, no entry points -- a pure library by design.
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.6.1...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.6.2...HEAD
 [0.2.0]: https://github.com/DazzleLib/dazzle-lib/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DazzleLib/dazzle-lib/releases/tag/v0.1.0

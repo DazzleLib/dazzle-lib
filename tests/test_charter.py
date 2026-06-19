@@ -72,7 +72,11 @@ def test_stdlib_only():
                                # NOT a runtime/behavior import (charter-safe; added
                                # with the 0.3 pure-primitives evolution).
                "json", "typing", "enum", "dataclasses", "abc", "collections",
-               "datetime", "ast", "dazzle_lib"}
+               "datetime", "ast",
+               "fractions",  # exact rational densification (the mediant in
+                             # Continuum.densify_between); pure stdlib,
+                             # deterministic, no I/O -- charter-safe (0.6.2).
+               "dazzle_lib"}
     violations = {}
     for path in _module_files():
         extra = _imports_of(path) - allowed - BANNED_IMPORTS
