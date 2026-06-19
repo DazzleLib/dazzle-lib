@@ -11,6 +11,11 @@ one (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.6.5] -- 2026-06-19
+
+### Added
+- **`to_dict` / `from_dict` on the ladder-floor value types `Groupable` + `Unified` (SH redesign Step 7).** Each gains a `SCHEMA_VERSION` + `to_dict()` (a tree of basic types) + a `from_dict()` classmethod, satisfying the `Serializable` protocol -- Gemini's "one thing": a complete value object must round-trip without information loss (the bridge from ontology to engineering; canonical debug/log form; consumer-decoupled). `from_dict` tolerates a missing `meaning`. Round-trip tested (`test_groupable_serde.py`). Serialization of the recursive types `Continuum`/`ContinuumSpace` (which needs `Fraction <-> "n/d"` handling for densified rungs) is deferred to a follow-up.
+
 ## [0.6.4] -- 2026-06-19
 
 ### Added
@@ -104,6 +109,6 @@ epic [DazzleLib/.github#3](https://github.com/DazzleLib/.github/issues/3)).
 ### Notes
 - MIT, stdlib-only, Python >=3.9, no entry points -- a pure library by design.
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.6.4...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.6.5...HEAD
 [0.2.0]: https://github.com/DazzleLib/dazzle-lib/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DazzleLib/dazzle-lib/releases/tag/v0.1.0

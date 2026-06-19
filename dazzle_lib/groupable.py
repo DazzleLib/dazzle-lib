@@ -25,6 +25,7 @@ self-contained.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Any, ClassVar, Dict
 
 __all__ = ["Unified", "Groupable"]
 
@@ -42,6 +43,8 @@ class Groupable:
     plus: str
     meaning: str = ""
 
+    SCHEMA_VERSION: ClassVar[int] = 1
+
     def invert(self) -> "Groupable":
         """Swap the poles. EVERY Groupable inverts -- there is no one-way value."""
         return Groupable(minus=self.plus, plus=self.minus, meaning=self.meaning)
@@ -52,6 +55,17 @@ class Groupable:
         DERIVED (``not-<label>``), not stored. The cheap default form -- still a
         full dual, never a one-way escape from invertibility."""
         return Groupable(minus=f"not-{label}", plus=label, meaning=meaning or label)
+
+    def to_dict(self) -> Dict[str, Any]:
+        """Serialize to a tree of basic types (satisfies the ``Serializable``
+        protocol; the value object proves it is self-contained)."""
+        return {"minus": self.minus, "plus": self.plus, "meaning": self.meaning}
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Groupable":
+        return cls(
+            minus=data["minus"], plus=data["plus"], meaning=data.get("meaning", "")
+        )
 
 
 @dataclass(frozen=True)
@@ -67,6 +81,8 @@ class Unified:
     label: str
     meaning: str = ""
 
+    SCHEMA_VERSION: ClassVar[int] = 1
+
     def groupable(self) -> Groupable:
         """The implicit cut ``0_ag -> {minus, plus}`` (the inverse is derived)."""
         return Groupable.unified(self.label, meaning=self.meaning)
@@ -76,3 +92,10 @@ class Unified:
         (before any direction is chosen) returns itself. The ``-(-(x)) == x``
         round-trip lives on the cut form (see :meth:`Groupable.invert`)."""
         return self
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {"label": self.label, "meaning": self.meaning}
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "Unified":
+        return cls(label=data["label"], meaning=data.get("meaning", ""))
