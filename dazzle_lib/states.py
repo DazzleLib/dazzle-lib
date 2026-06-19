@@ -258,14 +258,24 @@ class Transition:
 
     @property
     def kind(self) -> str:
-        """The SH-redesign LATERAL / GENERATIVE vocabulary, DERIVED from
-        ``reversibility`` (no duplicate field): a ``REVERSIBLE`` edge is
-        ``"lateral"`` (a move WITHIN the space; round-trips); a ``GENERATIVE``
-        edge is ``"generative"`` (spawns/destroys structure -- the sqrt(-1) move;
-        lossy-on-reverse unless a ``Receipt`` preserves what it made, spike C13);
-        a ``REFUSED_AT_BOUNDARY`` edge is ``"refused"`` (criticality refuses it)."""
+        """The SH-redesign vocabulary, DERIVED from ``reversibility`` (no duplicate
+        field). Maps ALL FOUR reversibility classes -- only ``"lateral"``
+        round-trips; the other three are the non-lateral (lossy / refused) classes:
+
+        - ``REVERSIBLE  -> "lateral"``    -- a move WITHIN the space; round-trips.
+        - ``ONE_WAY     -> "one-way"``    -- permitted but cannot return on its own
+          (a mini-graduation, e.g. embedded->publish); lossy-on-reverse, NO
+          structure created.
+        - ``GENERATIVE  -> "generative"`` -- spawns/destroys structure (the sqrt(-1)
+          move); lossy-on-reverse unless a ``Receipt`` preserves it (spike C13).
+        - ``REFUSED_AT_BOUNDARY -> "refused"`` -- criticality refuses it pre-flight.
+
+        Completeness is pinned by ``test_kind_covers_every_reversibility`` -- a new
+        ``Reversibility`` value with no mapping fails the suite (no silent
+        fallback)."""
         return {
             Reversibility.REVERSIBLE: "lateral",
+            Reversibility.ONE_WAY: "one-way",
             Reversibility.GENERATIVE: "generative",
             Reversibility.REFUSED_AT_BOUNDARY: "refused",
         }[self.reversibility]

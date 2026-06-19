@@ -46,3 +46,26 @@ def test_refused_kind():
         reversibility=Reversibility.REFUSED_AT_BOUNDARY,
     )
     assert t.kind == "refused"
+
+
+def test_one_way_kind():
+    # ONE_WAY = permitted but cannot return on its own (a mini-graduation,
+    # e.g. embedded -> publish). Surfaced by the consumer-integration probe:
+    # the real registry declares ONE_WAY edges that an incomplete kind() missed.
+    t = Transition(
+        axis="mode", from_values=("embedded",), to_value="published",
+        verb="publish", reversibility=Reversibility.ONE_WAY,
+    )
+    assert t.kind == "one-way"
+    assert t.reversible is False
+
+
+def test_kind_covers_every_reversibility():
+    # COMPLETENESS GUARD: every Reversibility value must have a kind mapping, so a
+    # newly-added enum member without one fails here (no silent fallback).
+    valid = {"lateral", "one-way", "generative", "refused"}
+    for r in Reversibility:
+        kwargs = dict(axis="x", from_values=("a",), to_value="b", verb="v", reversibility=r)
+        if r is Reversibility.GENERATIVE:
+            kwargs.update(creates=("thing",), identity_fate="reborn")
+        assert Transition(**kwargs).kind in valid

@@ -11,6 +11,11 @@ one (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.6.6] -- 2026-06-19
+
+### Fixed
+- **`Transition.kind` was incomplete -- `KeyError` on `Reversibility.ONE_WAY`.** Step 4 mapped only three of the four `Reversibility` classes; the dazzlecmd consumer-integration probe exercised `kind` against the REAL `build_default_registry()` and hit a declared `ONE_WAY` edge (a "mini-graduation": permitted but cannot return on its own, e.g. embedded->publish). `kind` now maps all four (`ONE_WAY -> "one-way"`, lossy-on-reverse with no structure created -- distinct from `GENERATIVE`). A completeness-guard test (`test_kind_covers_every_reversibility`) iterates every `Reversibility` member so a future addition without a mapping fails the suite (no silent fallback). Found by validate-first integration before any production rewiring.
+
 ## [0.6.5] -- 2026-06-19
 
 ### Added
@@ -109,6 +114,6 @@ epic [DazzleLib/.github#3](https://github.com/DazzleLib/.github/issues/3)).
 ### Notes
 - MIT, stdlib-only, Python >=3.9, no entry points -- a pure library by design.
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.6.5...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.6.6...HEAD
 [0.2.0]: https://github.com/DazzleLib/dazzle-lib/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DazzleLib/dazzle-lib/releases/tag/v0.1.0
