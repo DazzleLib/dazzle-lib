@@ -714,3 +714,112 @@ class ContinuumSpace:
                                  f"({' -> '.join(ax.levels())})")
             lines.append(f"  leaves (normal form): {', '.join(self.leaves())}")
         return "\n".join(lines)
+
+    # -- SH pairwise view (Step 3: the 4-quadrant / four-phase wheel) ---------
+    def quadrants(self, axis1: str, axis2: str) -> "QuadrantView":
+        """A pairwise SH :class:`QuadrantView` over TWO of this (N-ary) space's
+        axes -- the 4-quadrant / four-phase wheel is a 2-axis PROJECTION, never a
+        structural limit (spike C7-C9). ``axis1`` plays the first (meaning)
+        channel, ``axis2`` the second (position) channel; the consumer designates
+        which is which by call order (the bedrock stays channel-agnostic)."""
+        for a in (axis1, axis2):
+            if a not in self.axes:
+                raise ContinuumError(
+                    f"{a!r} is not an axis of space {self.name!r}; "
+                    f"axes: {tuple(self.axes)}"
+                )
+        if axis1 == axis2:
+            raise ContinuumError(
+                f"quadrants needs two DISTINCT axes (got {axis1!r} twice)"
+            )
+        return QuadrantView(space=self, axis1=axis1, axis2=axis2)
+
+
+# ===========================================================================
+# QuadrantView -- the SH four-phase wheel as a PAIRWISE view over two axes.
+# ===========================================================================
+# The Mechanics-of-the-SH-Cycle structure (spike C7-C9): two channels cross into
+# 4 sign-quadrants; each of the four primitives (the two polarity signs + the two
+# channel names) cycles through {begin, peak, end, hidden}; the RECIPE -- "the
+# primitive absent from a quadrant's formula sits at its hidden phase" -- is the
+# CHECKABLE criticality predicate (reproduced 4/4 on PVIR in the spike). A
+# QuadrantView is DERIVED (computed from a ContinuumSpace + a chosen axis pair),
+# never stored. PURE -- declared data + lookups, no effects (charter-safe).
+
+_QS: Tuple[str, ...] = ("Q1", "Q2", "Q3", "Q4")
+_PHASES: Tuple[str, ...] = ("begin", "peak", "end", "hidden")
+
+# (first-sign, second-sign) + the operative same/diff signature per quadrant
+# (SH sec 3.3). Q2 = FULL COLLAPSE (both same); Q4 = FULL DIFFERENTIATION.
+_QUADRANT_SIG = {
+    "Q1": {"sign": (1, 1),   "first": "same", "second": "diff"},
+    "Q2": {"sign": (-1, 1),  "first": "same", "second": "same"},
+    "Q3": {"sign": (-1, -1), "first": "diff", "second": "same"},
+    "Q4": {"sign": (1, -1),  "first": "diff", "second": "diff"},
+}
+# Four-phase orbit per primitive, indexed Q1..Q4 (SH sec 4.1). The two channel
+# ROLES ("first"/"second") are slotted to the chosen axis names at view time.
+_POLARITY_PHASES = {
+    "+": ("peak", "end", "hidden", "begin"),
+    "-": ("hidden", "begin", "peak", "end"),
+}
+_CHANNEL_PHASES = {
+    "first": ("begin", "peak", "end", "hidden"),
+    "second": ("end", "hidden", "begin", "peak"),
+}
+
+
+@dataclass(frozen=True)
+class QuadrantView:
+    """The SH 4-quadrant / four-phase wheel as a PAIRWISE view over two axes of a
+    :class:`ContinuumSpace` (spike C7-C9). The space is N-ary; this is a 2-axis
+    projection. ``axis1`` plays the first (meaning) channel, ``axis2`` the second
+    (position) channel. Pure: derived from declared data, no effects."""
+
+    space: "ContinuumSpace"
+    axis1: str
+    axis2: str
+
+    def quadrants(self) -> Tuple[Tuple[int, int], ...]:
+        """The four sign-quadrants ``(first-sign, second-sign)``: Q1(+,+) .. Q4(+,-)."""
+        return tuple(_QUADRANT_SIG[q]["sign"] for q in _QS)
+
+    def _phase_map(self) -> Mapping[str, Tuple[str, ...]]:
+        """The four primitives -> their phase orbit: the two polarities ``+``/``-``
+        plus the two channels (named by the chosen axes)."""
+        return {
+            "+": _POLARITY_PHASES["+"],
+            "-": _POLARITY_PHASES["-"],
+            self.axis1: _CHANNEL_PHASES["first"],
+            self.axis2: _CHANNEL_PHASES["second"],
+        }
+
+    def hidden_at(self, quadrant: str) -> str:
+        """The primitive ABSENT at ``quadrant`` = the one at its HIDDEN phase (the
+        SH recipe; the checkable criticality signal). Returns ``'+'``, ``'-'``,
+        ``axis1``, or ``axis2``."""
+        if quadrant not in _QS:
+            raise ContinuumError(f"unknown quadrant {quadrant!r}; one of {_QS}")
+        i = _QS.index(quadrant)
+        for prim, phases in self._phase_map().items():
+            if phases[i] == "hidden":
+                return prim
+        raise ContinuumError(f"no hidden primitive at {quadrant!r}")  # unreachable
+
+    def agreement_diagonal(self) -> Tuple[str, str]:
+        """``{Q2, Q4}`` -- both channels at the SAME resolution."""
+        return ("Q2", "Q4")
+
+    def disagreement_diagonal(self) -> Tuple[str, str]:
+        """``{Q1, Q3}`` -- one channel resolved, the other not."""
+        return ("Q1", "Q3")
+
+    def tau_steps(self) -> Tuple[str, ...]:
+        """The single-channel flip per boundary Q1->Q2->Q3->Q4->Q1: exactly ONE
+        channel flips each step, alternating (the L,M,L,M alternation). Returns the
+        axis name flipped at each of the four steps."""
+        flips = []
+        for i in range(4):
+            a, b = _QUADRANT_SIG[_QS[i]], _QUADRANT_SIG[_QS[(i + 1) % 4]]
+            flips.append(self.axis1 if a["first"] != b["first"] else self.axis2)
+        return tuple(flips)

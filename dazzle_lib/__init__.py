@@ -43,6 +43,7 @@ from .continuum import (
     ContinuumProtocol,
     ContinuumSpace,
     ContinuumSpaceProtocol,
+    QuadrantView,
     RungValue,
 )
 from .states import (
@@ -97,6 +98,7 @@ __all__ = [
     "ContinuumError",
     "ContinuumBoundaryError",
     "RungValue",
+    "QuadrantView",
     # state-system primitives (0.4+) -- axes, observed state, declared transitions
     "OPEN",
     "Reversibility",

@@ -11,6 +11,11 @@ one (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.6.3] -- 2026-06-19
+
+### Added
+- **The SH pairwise view on `ContinuumSpace` (SH redesign Step 3): `ContinuumSpace.quadrants(axis1, axis2) -> QuadrantView`.** The Mechanics-of-the-SH-Cycle four-quadrant / four-phase wheel as a PAIRWISE view over any two axes of the N-ary space -- never a structural 2-axis limit (the space keeps `compose`/`normal_form`). `QuadrantView` exposes `quadrants()` (the 4 sign-combos), `hidden_at(quadrant)` (the "absent primitive = hidden phase" RECIPE -- the checkable criticality predicate, reproduced 4/4 on the PVIR mapping), `agreement_diagonal()`/`disagreement_diagonal()` ({Q2,Q4} / {Q1,Q3}), and `tau_steps()` (the single-channel L,M,L,M flip alternation). `axis1` plays the first (meaning) channel, `axis2` the second (position) channel -- the bedrock stays channel-agnostic; the consumer designates which is which by call order. Pure + charter-safe (declared data + lookups, no effects); claims port spike C7/C8/C9 (`test_quadrant_view.py`).
+
 ## [0.6.2] -- 2026-06-19
 
 ### Added
@@ -94,6 +99,6 @@ epic [DazzleLib/.github#3](https://github.com/DazzleLib/.github/issues/3)).
 ### Notes
 - MIT, stdlib-only, Python >=3.9, no entry points -- a pure library by design.
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.6.2...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.6.3...HEAD
 [0.2.0]: https://github.com/DazzleLib/dazzle-lib/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DazzleLib/dazzle-lib/releases/tag/v0.1.0
