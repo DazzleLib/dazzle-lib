@@ -3,6 +3,11 @@ name: Publish to PyPI
 on:
   push:
     tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      confirm:
+        description: 'Type YES to confirm manual publish to PyPI'
+        required: true
 
 permissions:
   id-token: write

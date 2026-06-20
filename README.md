@@ -11,7 +11,7 @@
 
 Every `dazzle-*` library ([the stack](https://github.com/DazzleLib/.github/blob/main/docs/STACK-MAP.md)) builds on this package: it defines what stack objects can be expected to do (view themselves, serialize themselves), what shapes cross-layer payloads have, and (as of v0.3.x) the pure computational **primitives** they compose on. 
 
-**Types + pure primitives** -- by charter this package is stdlib-only and SIDE-EFFECT-FREE forever (no I/O, no path handling, no platform probing, no subprocess). Pure computation over data (a `Continuum`'s ordering / stepping / slicing) is in-charter; side effects never are. (The charter evolved 0.2 -> 0.3 from "types only" to "types + pure primitives" -- the stack needs shared *composable* primitives, not only contract types; see the CHANGELOG for the why. The hard guarantees, enforced by `tests/test_charter.py`, are unchanged.)
+**Types + pure primitives** -- by charter this package is stdlib-only and SIDE-EFFECT-FREE forever (no I/O, no path handling, no platform probing, no subprocess). Pure computation over data (a `Continuum`'s ordering / stepping / slicing) is in-charter; side effects never are. (The charter evolved 0.2 -> 0.3 from "types only" to "types + pure primitives" -- the stack needs shared *composable* primitives, not only contract types. The hard guarantees, enforced by `tests/test_charter.py`, are unchanged.)
 
 ```bash
 pip install dazzle-lib
@@ -27,6 +27,8 @@ pip install dazzle-lib
 | `dazzle_lib.mixins` | `DazzleDataMixin` -- derives `to_json`/`summary`/`__str__` from your `to_dict` |
 | `dazzle_lib.continuum` (0.3+) | `Continuum` -- the signed ordered-axis primitive (invariant-bearing zero, warm/cold lens, THAC0 threshold gate, channel backing) -- and `ContinuumSpace` -- N parallel Continuums on one presence scale (`slice`, `cascade_to_neutral`, cross-axis navigation, `describe`). Plus their structural `Protocol`s. Pure, stdlib-only, side-effect-free |
 | `dazzle_lib.states` (0.4+) | The generic state-system machinery: `StateAxis` (a dimension; HAS-A optional `Continuum`), `EntityState` (an OBSERVED-not-stored snapshot; a point in a `ContinuumSpace`), `Transition` / `CompositeTransition` (declared edges + ordered multi-axis composition, with the `Reversibility` criticality algebra), `TransitionRegistry` (the criticality tables, queryable), `assert_round_trip` (the `group o ungroup = identity` contract executable), `observe`. The vocabulary; the consumer DECLARES its own axes/edges. Pure, stdlib + `Continuum` only |
+
+> **New to the `Continuum` model?** [**The ladder**](docs/the-ladder.md) explains the four base objects (`Unified` / `Groupable` / `Continuum` / `ContinuumSpace`), the implicit-carry chain, the signed invariant-bearing zero, and aligned-vs-product composition.
 
 ## The idea: the dict is the interface
 
