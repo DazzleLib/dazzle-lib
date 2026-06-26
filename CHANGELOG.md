@@ -11,6 +11,17 @@ one (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.7.0] -- 2026-06-26
+
+### Added
+- The value-ladder closure: the `Unified <-> Groupable <-> Continuum <-> ContinuumSpace` ladder is now bidirectional with named operators.
+  - `Groupable.unify() -> Unified` -- the reduction "drop the derived not-P pole, keep the unifying axis" (the axis is the `meaning`; falls back to `plus`). Lives on `Groupable` (acyclic; `Unified` is co-resident).
+  - `Continuum.flatten() -> Groupable` -- the named reduction "drop the middle rungs, keep the two poles" (alias of `poles()`, so `c.densify_between(...).flatten() == c.flatten()`).
+  - `promote(value)` -- a free stepper one rung UP the ladder (`Unified -> Groupable -> Continuum -> ContinuumSpace`), the dual of the reductions.
+- Reduce (`unify`/`flatten`/`axis`) is total and deductive; promote (`cut`/`from_groupable`/`compose`) is a choice. `reduce . promote == id` on canonical inputs; `promote . reduce` is intentionally lossy (the ladder is a retraction, not an isomorphism). The round-trip laws are pinned as regression tests (`test_continuum_bridges`, +10).
+
+Additive only -- no existing symbol changed; `groupable.py` stays import-clean (imports nothing from `continuum`). Decided empirically by the `spike_groupable_continuum_ladder` spike (correspondence + morphism over identity-by-collapse: the laws hold either way, and collapsing the value atom into a `Continuum` costs 3.3x instantiation for no law gain).
+
 ## [0.6.7] -- 2026-06-19
 
 ### Added
@@ -119,6 +130,6 @@ epic [DazzleLib/.github#3](https://github.com/DazzleLib/.github/issues/3)).
 ### Notes
 - MIT, stdlib-only, Python >=3.9, no entry points -- a pure library by design.
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.6.7...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.7.0...HEAD
 [0.2.0]: https://github.com/DazzleLib/dazzle-lib/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DazzleLib/dazzle-lib/releases/tag/v0.1.0

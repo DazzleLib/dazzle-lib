@@ -49,6 +49,18 @@ class Groupable:
         """Swap the poles. EVERY Groupable inverts -- there is no one-way value."""
         return Groupable(minus=self.plus, plus=self.minus, meaning=self.meaning)
 
+    def unify(self) -> "Unified":
+        """REDUCTION ``Groupable -> Unified``: drop the derived not-P pole, keep
+        the unifying axis. The axis that unified ``{minus, plus}`` is ``meaning``
+        (the SH "axis = the unification of its two poles"); falls back to ``plus``
+        when ``meaning`` is empty (a non-unified-origin dual). The inverse of
+        :meth:`Unified.groupable` on unified-origin values --
+        ``g.unify().groupable() == g`` and ``cut(U).unify().label == U.label``.
+        Lives here, not on Continuum: ``Unified`` is co-resident, so the
+        reduction stays acyclic (``groupable.py`` imports nothing from
+        ``continuum``)."""
+        return Unified(label=self.meaning or self.plus, meaning=self.meaning)
+
     @staticmethod
     def unified(label: str, *, meaning: str = "") -> "Groupable":
         """Build a Groupable from a single UNIFIED (0_ag) label: the inverse is

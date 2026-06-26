@@ -262,6 +262,14 @@ class Continuum:
             meaning=self.invariant or self.name,
         )
 
+    def flatten(self) -> Groupable:
+        """REDUCTION ``Continuum -> Groupable``: drop every intermediate rung,
+        keep the two extreme poles. The NAMED reduction (the down direction of
+        ``densify``/``from_groupable``) -- it makes "remove rungs -> Groupable"
+        legible at the call site. Alias of :meth:`poles`; reduce IGNORES added
+        middles, so ``c.densify_between(...).flatten() == c.flatten()``."""
+        return self.poles()
+
     def densify_between(
         self,
         lower: str,
@@ -876,3 +884,22 @@ def fold(node: Any, leaf: Callable[[Any], Any],
     if not kids:
         return leaf(node)
     return combine(node, [fold(c, leaf, combine) for c in kids.values()])
+
+
+def promote(value: Any) -> Any:
+    """Step ONE rung UP the value ladder, made uniform: ``Unified -> Groupable``
+    (cut, derive the not-P) ``-> Continuum`` (the degenerate 2-rung axis) ``->
+    ContinuumSpace`` (a 1-axis product). The promotion dual of the named
+    reductions (:meth:`Groupable.unify`, :meth:`Continuum.flatten`). Promotion
+    ADDS structure (a choice), so ``reduce . promote == id`` on canonical inputs
+    while ``promote . reduce`` is intentionally lossy -- the ladder is a
+    retraction, not an isomorphism. A ``ContinuumSpace`` is the top of the
+    auto-steppable ladder and is returned unchanged (composing a further axis is
+    a choice this stepper cannot make)."""
+    if isinstance(value, Unified):
+        return value.groupable()
+    if isinstance(value, Groupable):
+        return Continuum.from_groupable(value)
+    if isinstance(value, Continuum):
+        return ContinuumSpace.compose(value.name, {value.name: value})
+    return value  # ContinuumSpace -> top of the ladder

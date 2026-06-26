@@ -10,7 +10,14 @@ from fractions import Fraction
 
 import pytest
 
-from dazzle_lib import Continuum, ContinuumError, Groupable
+from dazzle_lib import (
+    Continuum,
+    ContinuumError,
+    ContinuumSpace,
+    Groupable,
+    Unified,
+    promote,
+)
 
 
 def _ladder() -> Continuum:
@@ -63,3 +70,81 @@ def test_from_groupable_materializes_degenerate_continuum():
     assert c.rank("not-loaded") == -1 and c.rank("loaded") == 1
     # the materialized continuum's poles recover the bounds (round-trip-ish)
     assert c.poles().minus == "not-loaded" and c.poles().plus == "loaded"
+
+
+# ---------------------------------------------------------------------------
+# Value-ladder closure laws (value-ladder-closure DWP, T1).
+#
+# The bidirectional morphism ladder ``Unified <-> Groupable <-> Continuum <->
+# ContinuumSpace``: reduce (``unify`` / ``flatten`` / ``axis``) is total +
+# deductive; promote (``cut`` / ``from_groupable`` / ``compose``) is a choice.
+# ``reduce . promote == id`` on canonical inputs; ``promote . reduce`` is
+# intentionally lossy (a retraction, not an isomorphism). Seeded from the spike
+# ``spike_groupable_continuum_ladder.py`` (15/15).
+# ---------------------------------------------------------------------------
+
+
+def test_unify_reduces_a_groupable_to_its_unifying_axis():
+    g = Groupable.unified("loaded", meaning="loading")
+    u = g.unify()
+    assert isinstance(u, Unified)
+    assert u.label == "loading"          # the axis = the `meaning` (the SH cut)
+    assert u.meaning == "loading"
+
+
+def test_unify_then_groupable_round_trips():            # AC-V1
+    # The round-trip holds for a canonical unified-origin dual (plus == meaning,
+    # minus == "not-<axis>"); a dual whose pole label differs from its axis is
+    # not unified-origin and reduce is intentionally lossy there.
+    g = Groupable.unified("activation")
+    assert g.unify().groupable() == g
+
+
+def test_cut_then_unify_recovers_the_axis_label():     # AC-V1, the user's law
+    u = Unified(label="activation")
+    assert u.groupable().unify().label == u.label
+
+
+def test_unify_falls_back_to_the_plus_pole_without_a_meaning():
+    g = Groupable(minus="off", plus="on")              # non-unified-origin dual
+    assert g.unify().label == "on"
+
+
+def test_flatten_is_the_named_alias_of_poles():
+    c = _ladder()
+    assert c.flatten() == c.poles()
+
+
+def test_flatten_ignores_added_middle_rungs():         # AC-V2
+    g = Groupable.unified("on", meaning="activation")
+    c = Continuum.from_groupable(g)
+    densified = c.densify_between("not-on", "on", "half")
+    assert densified.flatten() == c.flatten() == g
+
+
+def test_from_groupable_then_flatten_round_trips():     # AC-V1
+    g = Groupable.unified("on", meaning="activation")
+    assert Continuum.from_groupable(g).flatten() == g
+
+
+def test_densify_at_center_materializes_the_hidden_zero():   # AC-V3
+    g = Groupable.unified("on", meaning="activation")
+    c = Continuum.from_groupable(g).densify_between("not-on", "on", "neutral")
+    assert c.rank("neutral") == 0          # mediant(-1, +1) == 0
+    assert c.neutral() == "neutral"        # the 3-rung/odd case has an explicit 0
+
+
+def test_promote_steps_one_rung_up_the_whole_ladder():
+    u = Unified(label="activation")
+    g = promote(u)
+    assert isinstance(g, Groupable) and g == u.groupable()
+    c = promote(g)
+    assert isinstance(c, Continuum) and c == Continuum.from_groupable(g)
+    space = promote(c)
+    assert isinstance(space, ContinuumSpace)
+    assert space.axes[c.name] == c         # the single composed axis is recoverable
+
+
+def test_promote_then_reduce_is_a_retraction_on_the_dual():   # L2
+    g = Groupable.unified("on", meaning="activation")
+    assert promote(g).flatten() == g       # Groupable -> Continuum -> Groupable

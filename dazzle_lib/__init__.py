@@ -47,6 +47,7 @@ from .continuum import (
     RungValue,
     children,
     fold,
+    promote,
     walk,
 )
 from .states import (
@@ -106,6 +107,8 @@ __all__ = [
     "children",
     "walk",
     "fold",
+    # the value-ladder promotion stepper (0.7+) -- dual of unify()/flatten()
+    "promote",
     # state-system primitives (0.4+) -- axes, observed state, declared transitions
     "OPEN",
     "Reversibility",
