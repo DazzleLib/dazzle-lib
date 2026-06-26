@@ -25,9 +25,32 @@ self-contained.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, ClassVar, Dict
+from typing import Any, ClassVar, Dict, Protocol, runtime_checkable
 
-__all__ = ["Unified", "Groupable"]
+__all__ = ["Unified", "Groupable", "GroupableProtocol"]
+
+
+@runtime_checkable
+class GroupableProtocol(Protocol):
+    """The structural contract the bedrock VALUE :class:`Groupable` satisfies --
+    its value-LOCAL surface: the ``{minus, plus, meaning}`` dual, ``invert``, the
+    serialization round-trip, and the ``unify`` reduction. Mirrors the
+    ``ContinuumProtocol`` idiom (nothing is forced to subclass).
+
+    Value-LOCAL on purpose: it does NOT name the promotion (``from_groupable`` /
+    ``densify`` live on the Continuum side), so this contract never references
+    ``Continuum`` -- the module stays acyclic by charter. This is the type a
+    consumer accepts when it means "a {P, not-P} dual", distinct from the entity
+    grouping CAPABILITY (``dazzlecmd_lib`` ``GroupingCapable``)."""
+
+    minus: str
+    plus: str
+    meaning: str
+    SCHEMA_VERSION: int
+
+    def invert(self) -> "Groupable": ...
+    def unify(self) -> "Unified": ...
+    def to_dict(self) -> Dict[str, Any]: ...
 
 
 @dataclass(frozen=True)

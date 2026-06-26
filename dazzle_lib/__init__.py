@@ -35,7 +35,7 @@ from .payloads import (
     WindowsMetadataDict,
 )
 from .protocols import PathVariantResolver, Serializable, Viewable
-from .groupable import Groupable, Unified
+from .groupable import Groupable, GroupableProtocol, Unified
 from .continuum import (
     Continuum,
     ContinuumBoundaryError,
@@ -66,6 +66,7 @@ from .transitions import (
     Receipt,
     TransitionContext,
     TransitionError,
+    VerbContext,
 )
 
 __all__ = [
@@ -94,6 +95,7 @@ __all__ = [
     # ladder floor (0.6.1+) -- the 0_ag unified value + the {-,+} dual (the bounds)
     "Unified",
     "Groupable",
+    "GroupableProtocol",
     # pure primitives (0.3+) -- the Continuum signed-axis + its space
     "Continuum",
     "ContinuumSpace",
@@ -124,4 +126,6 @@ __all__ = [
     "Receipt",
     "CriticalityBoundaryError",
     "TransitionError",
+    # the capability-side bedrock contract (0.8+) -- what a verb context adheres to
+    "VerbContext",
 ]

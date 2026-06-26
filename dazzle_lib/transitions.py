@@ -25,7 +25,7 @@ hooks, never here.
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any, Callable, Optional
+from typing import Any, Callable, Optional, Protocol, runtime_checkable
 
 from .states import Reversibility
 
@@ -74,6 +74,23 @@ class Receipt:
     reversible: bool
     verb: str
     payload: Any = None
+
+
+@runtime_checkable
+class VerbContext(Protocol):
+    """The capability-side bedrock contract: a verb context can ``apply`` a verb
+    to an (opaque) entity against a target and ``undo`` the resulting receipt.
+
+    This is the thing that ADHERES to the bedrock for behavior -- a consumer's
+    transition context, named so "bedrock declares, consumer adheres" is true of
+    the capability, not just the value/identity contracts. Domain-neutral by
+    design: the entity is ``Any`` (entity-opacity is the lift's whole point --
+    the executor extracts nothing structural from the entity), and the verb
+    vocabulary stays in the consumer. :class:`TransitionContext` is the bedrock's
+    own reference implementation of this contract."""
+
+    def apply(self, entity: Any, target: Any, *, verb: str) -> Receipt: ...
+    def undo(self, receipt: Receipt) -> Receipt: ...
 
 
 class TransitionContext:
@@ -161,5 +178,6 @@ __all__ = [
     "CriticalityBoundaryError",
     "TransitionError",
     "Receipt",
+    "VerbContext",
     "TransitionContext",
 ]

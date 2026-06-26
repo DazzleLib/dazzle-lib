@@ -17,7 +17,7 @@ Version levels:
 
 # Version components - edit these for version bumps
 MAJOR = 0
-MINOR = 7
+MINOR = 8
 PATCH = 0
 PHASE = ""  # Per-MINOR feature set: None, "alpha", "beta", "rc1", etc.
 
@@ -25,7 +25,7 @@ PHASE = ""  # Per-MINOR feature set: None, "alpha", "beta", "rc1", etc.
 PROJECT_PHASE = ""  # "prealpha", "alpha", "beta", "stable", or ""
 
 # Auto-updated by git hooks - do not edit manually
-__version__ = "0.7.0_main_23-20260626-96d4875b"
+__version__ = "0.8.0_main_24-20260626-05983eb5"
 __app_name__ = "dazzle-lib"
 
 

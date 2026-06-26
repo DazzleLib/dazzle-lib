@@ -15,6 +15,7 @@ from dazzle_lib import (
     ContinuumError,
     ContinuumSpace,
     Groupable,
+    GroupableProtocol,
     Unified,
     promote,
 )
@@ -148,3 +149,10 @@ def test_promote_steps_one_rung_up_the_whole_ladder():
 def test_promote_then_reduce_is_a_retraction_on_the_dual():   # L2
     g = Groupable.unified("on", meaning="activation")
     assert promote(g).flatten() == g       # Groupable -> Continuum -> Groupable
+
+
+def test_groupable_satisfies_the_groupable_protocol():   # AC-V6
+    # The bedrock value conforms to its value-LOCAL structural contract unchanged
+    # (the contract a consumer accepts when it means "a {P, not-P} dual").
+    assert isinstance(Groupable.unified("on", meaning="activation"), GroupableProtocol)
+    assert isinstance(Groupable("off", "on"), GroupableProtocol)

@@ -11,6 +11,15 @@ one (`docs/api-stability.md`); changes land via the stack's shim policy
 
 ## [Unreleased]
 
+## [0.8.0] -- 2026-06-26
+
+### Added
+- Two bedrock CONTRACT Protocols, completing "bedrock declares, consumer adheres" for both the value and the capability:
+  - `GroupableProtocol` (`@runtime_checkable`, in `groupable.py`) -- the value-LOCAL structural contract the `{minus, plus, meaning}` dual satisfies (`minus`/`plus`/`meaning`, `invert`, `to_dict`, `unify`, `SCHEMA_VERSION`). It never references `Continuum` (the promotion stays on the Continuum side), so `groupable.py` stays acyclic. Today's `Groupable` conforms unchanged.
+  - `VerbContext` (`@runtime_checkable`, in `transitions.py`) -- the capability-side contract a transition context adheres to: `apply(entity, target, *, verb) -> Receipt` + `undo(receipt) -> Receipt` over an OPAQUE entity. `TransitionContext` is the bedrock's own reference implementation; a guard test pins entity-opacity (the executor imposes no structural type on the transition entity) so the lift cannot silently regress into an entity contract.
+
+Additive only -- new Protocols, nothing changed; charter/purity guard green. These pair with the consumer's de-collision (dazzlecmd_lib's entity grouping capability renamed `Groupable -> GroupingCapable`), which frees the name `Groupable` to mean this bedrock value everywhere.
+
 ## [0.7.0] -- 2026-06-26
 
 ### Added
@@ -130,6 +139,6 @@ epic [DazzleLib/.github#3](https://github.com/DazzleLib/.github/issues/3)).
 ### Notes
 - MIT, stdlib-only, Python >=3.9, no entry points -- a pure library by design.
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.7.0...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.8.0...HEAD
 [0.2.0]: https://github.com/DazzleLib/dazzle-lib/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DazzleLib/dazzle-lib/releases/tag/v0.1.0
