@@ -98,8 +98,15 @@ class Continuum:
     """
 
     name: str
-    ranks: Mapping[str, int]
+    ranks: Mapping[str, Union[int, Fraction]]
     invariant: str = ""
+    # The declared SUBTYPE (DWP 2026-07-05 Rev 1.1/1.3): "full" (both
+    # reaches; the invariant seat at 0), "monopole" (ONE reach; 0 = the
+    # invariant/rest state), "list" (no invariant; plain ordinal), or ""
+    # (undeclared -- legacy-compatible, no rules enforced). Validation in
+    # __post_init__ is SIGN-STRUCTURE only; which name is a "pole" is
+    # semantics the consumer declares by choosing the subtype.
+    subtype: str = ""
     channels: Mapping[str, FrozenSet[str]] = field(default_factory=dict)
     # INWARD: a per-rung FIBER (a latent RungValue sub-structure hung over a
     # rung's position). The SAME child-relation as ContinuumSpace.axes, pointed
@@ -120,6 +127,64 @@ class Continuum:
                 f"continuum {self.name!r} has duplicate ranks -- the order must "
                 f"be a strict total order"
             )
+        if self.subtype:
+            values = list(self.ranks.values())
+            has_neg = any(r < 0 for r in values)
+            has_pos = any(r > 0 for r in values)
+            if self.subtype == "full":
+                if not (has_neg and has_pos):
+                    raise ContinuumError(
+                        f"continuum {self.name!r} declares subtype='full' but "
+                        f"lacks reaches on BOTH sides of the invariant seat (0)"
+                    )
+            elif self.subtype == "monopole":
+                if has_neg and has_pos:
+                    raise ContinuumError(
+                        f"continuum {self.name!r} declares subtype='monopole' "
+                        f"but has rungs on BOTH sides of 0 (one reach only)"
+                    )
+            elif self.subtype != "list":
+                raise ContinuumError(
+                    f"continuum {self.name!r}: unknown subtype "
+                    f"{self.subtype!r} (full|monopole|list|'')"
+                )
+
+    def nucleus(self) -> Unified:
+        """The axis's NUCLEUS (DWP 2026-07-05 N-B): the Unified this whole
+        axis is 'about' -- ``invariant`` (the conserved quantity) falling
+        back to ``name``. Codifies the meaning<->invariant bridge that
+        :meth:`poles` / :meth:`from_groupable` already enact."""
+        return Unified(label=self.invariant or self.name,
+                       meaning=self.invariant)
+
+    def level_at(self, rank: Union[int, Fraction], *,
+                 nearest: bool = False) -> str:
+        """The NAME at a signed rank -- ranks as ADDRESSES (DWP 2026-07-05
+        R-D; the user's counting: ``membership.level_at(+1) == "add"``).
+        Exact by default (raises on a vacant rank); ``nearest=True``
+        returns the closest rung (ties go WARMER -- toward the higher
+        rank), for hint surfaces."""
+        want = Fraction(rank)
+        for lvl, r in self.ranks.items():
+            if Fraction(r) == want:
+                return lvl
+        if nearest:
+            return min(
+                self.ranks,
+                key=lambda lvl: (abs(Fraction(self.ranks[lvl]) - want),
+                                 -Fraction(self.ranks[lvl])),
+            )
+        raise ContinuumError(
+            f"continuum {self.name!r} has no rung at rank {rank}; "
+            f"occupied: {sorted(str(Fraction(r)) for r in self.ranks.values())}"
+        )
+
+    @staticmethod
+    def rank_name(rank: Union[int, Fraction]) -> str:
+        """The canonical SPELLING of a rank -- the self-name an anonymous
+        rung wears until christened (DWP Rev 1.4: 'names are christenings
+        of positions, not prerequisites')."""
+        return str(Fraction(rank))
 
     # -- order ---------------------------------------------------------------
     def levels(self) -> Tuple[str, ...]:
@@ -274,7 +339,7 @@ class Continuum:
         self,
         lower: str,
         upper: str,
-        new_level: str,
+        new_level: Optional[str] = None,
         *,
         channels: Optional[FrozenSet[str]] = None,
     ) -> "Continuum":
@@ -296,6 +361,15 @@ class Continuum:
         mediant = Fraction(
             ra.numerator + rb.numerator, ra.denominator + rb.denominator
         )
+        if new_level is None:
+            # DWP Rev 1.4: the ANONYMOUS rung self-names as its rank
+            # spelling -- the index IS the name until christened.
+            new_level = self.rank_name(mediant)
+            if new_level in self.ranks:
+                raise ContinuumError(
+                    f"anonymous rung name {new_level!r} already exists in "
+                    f"continuum {self.name!r} -- christen it or name this one"
+                )
         new_ranks = dict(self.ranks)
         new_ranks[new_level] = mediant
         new_channels = dict(self.channels)
@@ -305,8 +379,80 @@ class Continuum:
             name=self.name,
             ranks=new_ranks,
             invariant=self.invariant,
+            subtype=self.subtype,
             channels=new_channels,
+            fibers=self.fibers,  # carried (a pre-C1 latent drop, fixed)
         )
+
+    def shift_from(self, rank: Union[int, Fraction], by: int
+                   ) -> Tuple["Continuum", Dict[str, Tuple[Fraction, Fraction]]]:
+        """Make integer room: every rung at rank >= ``rank`` moves by
+        ``by`` (DWP 2026-07-05 S-B). Names carry identity through the
+        shift (stored name-keyed data is unaffected); ANONYMOUS rungs
+        (self-named by position) re-key to their new spelling. Returns
+        ``(shifted_continuum, remap)`` where remap maps each moved rung's
+        FINAL name -> (old_rank, new_rank) -- the echo table.
+
+        FORBIDDEN (the invariant doctrine): moving the rank-0 seat, and
+        any rung changing SIDE (sign) -- relocation of the invariant is
+        re-basing at construction, never shifting."""
+        if by == 0:
+            raise ContinuumError("shift_from: 'by' must be nonzero")
+        pivot = Fraction(rank)
+        new_ranks: Dict[str, Union[int, Fraction]] = {}
+        remap: Dict[str, Tuple[Fraction, Fraction]] = {}
+        renames: Dict[str, str] = {}
+        for lvl, r in self.ranks.items():
+            fr = Fraction(r)
+            if fr < pivot:
+                new_ranks[lvl] = r
+                continue
+            if fr == 0:
+                raise ContinuumError(
+                    f"shift_from would move the invariant seat (rank 0, "
+                    f"{lvl!r}) of continuum {self.name!r} -- forbidden; "
+                    f"re-base at construction instead"
+                )
+            nr = fr + by
+            if (fr > 0) != (nr > 0) or nr == 0:
+                raise ContinuumError(
+                    f"shift_from would move {lvl!r} across the invariant "
+                    f"({fr} -> {nr}) in continuum {self.name!r} -- forbidden"
+                )
+            final = lvl
+            if lvl == self.rank_name(fr):  # anonymous: re-key (the MOVE)
+                final = self.rank_name(nr)
+                renames[lvl] = final
+            new_ranks[final] = nr if nr.denominator != 1 else int(nr)
+            remap[final] = (fr, nr)
+        new_channels = {renames.get(k, k): v for k, v in self.channels.items()}
+        new_fibers = {renames.get(k, k): v for k, v in self.fibers.items()}
+        return (
+            Continuum(name=self.name, ranks=new_ranks,
+                      invariant=self.invariant, subtype=self.subtype,
+                      channels=new_channels, fibers=new_fibers),
+            remap,
+        )
+
+    def rename_level(self, old: str, new: str) -> "Continuum":
+        """CHRISTENING (DWP Rev 1.4-B): give a rung -- typically an
+        anonymous self-named one -- its real name. Rank preserved;
+        channels and fibers re-key with it."""
+        if old not in self.ranks:
+            raise ContinuumError(
+                f"{old!r} is not a level of continuum {self.name!r}")
+        if new in self.ranks:
+            raise ContinuumError(
+                f"cannot christen {old!r} as {new!r}: the name already "
+                f"exists in continuum {self.name!r}")
+        new_ranks = {new if k == old else k: v for k, v in self.ranks.items()}
+        new_channels = {new if k == old else k: v
+                        for k, v in self.channels.items()}
+        new_fibers = {new if k == old else k: v
+                      for k, v in self.fibers.items()}
+        return Continuum(name=self.name, ranks=new_ranks,
+                         invariant=self.invariant, subtype=self.subtype,
+                         channels=new_channels, fibers=new_fibers)
 
     @classmethod
     def from_groupable(
@@ -456,6 +602,11 @@ class ContinuumSpace:
     # (``payload_for``); it never interprets or calls it -- so the primitive stays
     # pure + domain-neutral while consumers get a typed object, not a string dict.
     payloads: Mapping[str, Mapping[str, Any]] = field(default_factory=dict)
+
+    def nucleus(self) -> Unified:
+        """The space's NUCLEUS -- same question, same answer family as
+        every ladder element (DWP 2026-07-05 N-B)."""
+        return Unified(label=self.name, meaning=self.meaning)
 
     def __post_init__(self) -> None:
         if not self.axes:

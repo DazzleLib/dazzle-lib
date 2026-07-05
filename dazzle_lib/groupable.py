@@ -84,6 +84,27 @@ class Groupable:
         ``continuum``)."""
         return Unified(label=self.meaning or self.plus, meaning=self.meaning)
 
+    def nucleus(self) -> "Unified":
+        """The axis's NUCLEUS -- the one Unified this dual shares (the
+        meaning/invariant slot, formalized; DWP 2026-07-05 N-B). Identical
+        to :meth:`unify`; named for the role: every ladder element answers
+        ``nucleus()`` with the same object family."""
+        return self.unify()
+
+    def framing(self, lens: str = "warm") -> str:
+        """The FRAMING -- the directional reading of the axis (which pole
+        is figure vs ground; DWP 2026-07-05 Rev 1.3: framing is a role
+        DISTINCT from the nucleus). The default reading is toward the
+        warm pole (``{{spring,summer,fall},winter}`` frames "toward heat");
+        ``lens="cold"`` reads the other way. A DECLARED framing label
+        (e.g. "warmth" as a name of its own) is deferred until a consumer
+        needs it -- the reading direction is the shipped mechanism."""
+        if lens == "warm":
+            return self.plus
+        if lens == "cold":
+            return self.minus
+        raise ValueError(f"unknown framing lens {lens!r} (warm|cold)")
+
     @staticmethod
     def unified(label: str, *, meaning: str = "") -> "Groupable":
         """Build a Groupable from a single UNIFIED (0_ag) label: the inverse is
@@ -126,6 +147,11 @@ class Unified:
         """The pre-cut superposition is symmetric: inverting a unified value
         (before any direction is chosen) returns itself. The ``-(-(x)) == x``
         round-trip lives on the cut form (see :meth:`Groupable.invert`)."""
+        return self
+
+    def nucleus(self) -> "Unified":
+        """A Unified IS the nucleus (identity) -- the ladder's floor
+        answers the same question every higher element does."""
         return self
 
     def to_dict(self) -> Dict[str, Any]:
