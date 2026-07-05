@@ -123,10 +123,32 @@ class Continuum:
                            {k: frozenset(v) for k, v in self.channels.items()})
         object.__setattr__(self, "fibers", dict(self.fibers))
         if len(set(self.ranks.values())) != len(self.ranks):
+            seen: Dict[Any, str] = {}
+            pair = ""
+            for lvl, r in self.ranks.items():
+                if r in seen:
+                    pair = f" ({seen[r]!r} and {lvl!r} both at {r})"
+                    break
+                seen[r] = lvl
             raise ContinuumError(
-                f"continuum {self.name!r} has duplicate ranks -- the order must "
-                f"be a strict total order"
+                f"continuum {self.name!r} has duplicate ranks -- the order "
+                f"must be a strict total order{pair}"
             )
+        # GAP-3 guard (tester 2026-07-05): a PURE-NUMERIC name is a rank
+        # SPELLING (the anonymous-rung convention) -- it must EQUAL its
+        # rank, or the name lies under rank addressing.
+        for lvl, r in self.ranks.items():
+            try:
+                spelled = Fraction(lvl)
+            except (ValueError, ZeroDivisionError):
+                continue
+            if spelled != Fraction(r):
+                raise ContinuumError(
+                    f"continuum {self.name!r}: numeric name {lvl!r} "
+                    f"contradicts its rank {r} -- pure-numeric names are "
+                    f"rank spellings and must match (christen it with a "
+                    f"real name instead)"
+                )
         if self.subtype:
             values = list(self.ranks.values())
             has_neg = any(r < 0 for r in values)
@@ -371,7 +393,11 @@ class Continuum:
                     f"continuum {self.name!r} -- christen it or name this one"
                 )
         new_ranks = dict(self.ranks)
-        new_ranks[new_level] = mediant
+        # GAP-5 (tester): a whole-number mediant stores as int (Fraction
+        # is a JSON landmine; true fractions remain the consumer's
+        # serializer problem -- repro'd in one-offs).
+        new_ranks[new_level] = (
+            int(mediant) if mediant.denominator == 1 else mediant)
         new_channels = dict(self.channels)
         if channels is not None:
             new_channels[new_level] = frozenset(channels)
@@ -399,12 +425,22 @@ class Continuum:
         if by == 0:
             raise ContinuumError("shift_from: 'by' must be nonzero")
         pivot = Fraction(rank)
+        if pivot == 0:
+            raise ContinuumError(
+                f"shift_from: the pivot may not be the invariant seat (0) "
+                f"of continuum {self.name!r}")
+        # GAP-4 (tester 2026-07-05): the pivot's SIGN selects the SIDE --
+        # a positive pivot shifts the warm reach (r >= pivot), a negative
+        # pivot shifts the cold reach (r <= pivot). Without this,
+        # negative-side room-making always swept the invariant seat.
+        def affected(fr: Fraction) -> bool:
+            return fr >= pivot if pivot > 0 else fr <= pivot
         new_ranks: Dict[str, Union[int, Fraction]] = {}
         remap: Dict[str, Tuple[Fraction, Fraction]] = {}
         renames: Dict[str, str] = {}
         for lvl, r in self.ranks.items():
             fr = Fraction(r)
-            if fr < pivot:
+            if not affected(fr):
                 new_ranks[lvl] = r
                 continue
             if fr == 0:
@@ -467,6 +503,7 @@ class Continuum:
             name=name or (groupable.meaning or f"{groupable.minus}|{groupable.plus}"),
             ranks={groupable.minus: -1, groupable.plus: 1},
             invariant=groupable.meaning,
+            subtype="full",  # provably: one rung each side of the seat
         )
 
 

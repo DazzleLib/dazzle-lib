@@ -144,3 +144,44 @@ class TestShift:
         threshold = c.rank("io-detail")
         shown = [n for n in c.levels() if c.rank(n) <= threshold]
         assert shown[-1] == "io-detail" and "tracing" not in shown
+
+
+class TestTesterFindings0705:
+    """The 2026-07-05 combined-checklist findings, fixed + pinned."""
+
+    def test_gap3_numeric_name_must_match_rank(self):
+        # rename-to-wrong-number: the constructor guard (rename_level
+        # inherits it via reconstruction)
+        with pytest.raises(ContinuumError, match="contradicts its rank"):
+            Continuum("x", ranks={"3": 0})
+        c = Continuum("m", ranks={"a": -1, "b": 1}).densify_between("a", "b")
+        with pytest.raises(ContinuumError, match="contradicts its rank"):
+            c.rename_level("0", "5")
+        c.rename_level("0", "mid")  # christening with a REAL name still fine
+        Continuum("ok", ranks={"0": 0, "5/2": Fraction(5, 2)})  # truthful
+
+    def test_gap4_negative_side_room_making(self):
+        c = Continuum("v", ranks={"n": -3, "m": -2, "z": 0, "w": 1})
+        c2, remap = c.shift_from(-2, by=-1)   # cold-side: r <= -2 moves
+        assert c2.rank("m") == -3 and c2.rank("n") == -4
+        assert c2.rank("z") == 0 and c2.rank("w") == 1  # untouched
+        assert set(remap) == {"m", "n"}
+
+    def test_gap4_pivot_zero_rejected(self):
+        c = Continuum("v", ranks={"z": 0, "w": 1})
+        with pytest.raises(ContinuumError, match="invariant seat"):
+            c.shift_from(0, by=1)
+
+    def test_gap5_integer_mediant_stores_int(self):
+        c = Continuum("m", ranks={"a": -1, "b": 1}).densify_between("a", "b")
+        assert type(c.ranks["0"]) is int
+        import json
+        json.dumps(dict(c.ranks))  # no Fraction landmine for int mediants
+
+    def test_collision_error_names_the_rungs(self):
+        with pytest.raises(ContinuumError, match="'a' and 'b' both at 1"):
+            Continuum("x", ranks={"a": 1, "b": 1})
+
+    def test_from_groupable_declares_full(self):
+        c = Continuum.from_groupable(Groupable("cold", "hot", "temp"))
+        assert c.subtype == "full"

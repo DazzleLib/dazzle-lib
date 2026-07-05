@@ -9,6 +9,10 @@ Status: **beta**. The bedrock's surface is deliberately tiny and locked from day
 one (`docs/api-stability.md`); changes land via the stack's shim policy
 (temporary, noisy, tracked, terminal), never silently.
 
+## [0.8.2] - 2026-07-05
+
+Tester-checklist fixes on 0.8.1's new surface. Pure-numeric rung names must EQUAL their rank (the constructor guard; christening to a lying number is rejected -- numeric names are rank spellings, per the anonymous-rung convention). `shift_from`'s pivot SIGN now selects the side (a negative pivot shifts the cold reach), making negative-side room-making possible at all -- previously any negative shift swept the invariant seat; a pivot of 0 is rejected outright. Whole-number mediants from `densify_between` store as plain ints (the Fraction-in-JSON landmine defused for the integer case). The duplicate-ranks error names the colliding rungs. `from_groupable` declares `subtype="full"` (it provably is).
+
 ## [0.8.1] - 2026-07-05
 
 The nucleus formalized + ranks as addresses (the C1 bedrock slice, DWP 2026-07-05). `nucleus()` on all four ladder elements names the one Unified an axis is about (codifying the meaning<->invariant bridge `poles()`/`from_groupable` already enacted); `Groupable.framing()` separates the directional reading from the nucleus (which pole is figure vs ground). `Continuum.level_at(rank, nearest=)` makes ranks bidirectional coordinates (`membership.level_at(+1) == "add"`), exact on Fraction rungs. Declared `subtype` ("full" | "monopole" | "list") with sign-structure validation -- undeclared stays legacy-compatible. `densify_between`'s name is now optional (an anonymous rung self-names as its rank spelling -- the index is the name until christened) and it now carries `fibers` through reconstruction (a latent drop, fixed). `shift_from(rank, by)` makes integer room with names carrying identity (anonymous rungs re-key; moving or crossing the invariant seat is forbidden) and returns the remap table. `rename_level` is the christening. `ranks` annotation now tells the truth (`Union[int, Fraction]`).
@@ -143,6 +147,6 @@ epic [DazzleLib/.github#3](https://github.com/DazzleLib/.github/issues/3)).
 ### Notes
 - MIT, stdlib-only, Python >=3.9, no entry points -- a pure library by design.
 
-[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.8.1...HEAD
+[Unreleased]: https://github.com/DazzleLib/dazzle-lib/compare/v0.8.2...HEAD
 [0.2.0]: https://github.com/DazzleLib/dazzle-lib/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/DazzleLib/dazzle-lib/releases/tag/v0.1.0
