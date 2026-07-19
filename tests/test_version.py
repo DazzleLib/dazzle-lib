@@ -47,4 +47,10 @@ def test_pip_version_pep440():
     if PHASE:
         assert any(c.isalpha() for c in pip_v.split(".")[-1])
     else:
-        assert all(c.isdigit() or c == "." for c in pip_v)
+        # a `.devN` tail is valid PEP 440 even without a phase --
+        # fresh-checkout hook stamps derive `0.8.2.devN` and the old
+        # all-digits assertion rejected them (HOMEBOX handoff finding,
+        # 2026-07-19; red only on stamp shapes carrying .devN)
+        base, _, dev = pip_v.partition(".dev")
+        assert all(c.isdigit() or c == "." for c in base)
+        assert dev == "" or dev.isdigit()
